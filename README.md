@@ -24,7 +24,8 @@ The idea: in the near future, everyone will know a little coding. This repo is p
 
 Automated content checks run instantly. A maintainer reviews and merges. Your page goes live.
 
-Full guide → [CONTRIBUTING.md](CONTRIBUTING.md)
+Human guide → [claudeslides.com/contribute](https://claudeslides.com/contribute/)
+Agent/AI guide → [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## What counts as a submission?
 

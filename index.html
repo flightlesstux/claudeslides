@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaudeSlides — Open AI Gallery: What the World Built with Claude</title>
+<meta name="description" content="ClaudeSlides is an open AI gallery where anyone shares what they built, learned, or created with Claude AI. Kids, seniors, beginners, experts — all welcome.">
+<meta name="keywords" content="Claude AI, gallery, community, HTML projects, AI tools, Anthropic, built with Claude, creative projects, open source gallery">
+<meta name="author" content="Ercan Ermis">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://claudeslides.com/">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ClaudeSlides">
+<meta property="og:url" content="https://claudeslides.com/">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="ClaudeSlides — Open AI Gallery: What the World Built with Claude">
+<meta property="og:description" content="ClaudeSlides is an open AI gallery where anyone shares what they built, learned, or created with Claude AI. Kids, seniors, beginners, experts — all welcome.">
+<meta property="og:image" content="https://claudeslides.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@flightlesstux">
+<meta name="twitter:title" content="ClaudeSlides — Open AI Gallery: What the World Built with Claude">
+<meta name="twitter:description" content="ClaudeSlides is an open AI gallery where anyone shares what they built with Claude AI. All welcome.">
+<meta name="twitter:image" content="https://claudeslides.com/og-image.png">
+<!-- JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ClaudeSlides",
+  "url": "https://claudeslides.com/",
+  "description": "An open gallery of things people built, learned, and created with Claude AI.",
+  "author": {
+    "@type": "Person",
+    "name": "Ercan Ermis",
+    "url": "https://linkedin.com/in/ercanermis"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://claudeslides.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MZVZHDP4SN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MZVZHDP4SN');
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500&display=swap"></noscript>
+<style>
+
+  :root {
+    --bg:     #f7f3ed;
+    --bg2:    #ede8e0;
+    --bg3:    #e5dfd7;
+    --card:   #f2ede6;
+    --border: #d8d2ca;
+    --gold:   #8b6535;
+    --gold2:  #6b4e28;
+    --text:   #1c1a17;
+    --muted:  #6b6258;
+    --radius: 0px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 3rem;
+    background: rgba(247,243,237,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .nav-logo span { color: var(--gold); font-style: italic; font-weight: 300; letter-spacing: 0; }
+
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.75rem;
+    font-size: 0.6rem;
+    font-weight: 400;
+    font-family: 'Inter', system-ui, sans-serif;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.25s;
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+  }
+  .btn-primary { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+  .btn-primary:hover { background: var(--gold); color: var(--bg); }
+  .btn-outline { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem 5rem;
+  }
+
+  .hero-glow, .hero-grid { display: none; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 3.5rem;
+    opacity: 0.8;
+  }
+  .hero-badge::before, .hero-badge::after {
+    content: '';
+    display: inline-block;
+    width: 48px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.4;
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(3.5rem, 8vw, 8rem);
+    font-weight: 300;
+    line-height: 1.02;
+    letter-spacing: 0.03em;
+    margin-bottom: 2.5rem;
+    color: var(--text);
+    max-width: 1000px;
+  }
+  .hero h1 .grad {
+    color: var(--gold);
+    font-style: italic;
+    font-weight: 300;
+    background: none;
+    -webkit-text-fill-color: var(--gold);
+  }
+
+  .hero p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    max-width: 420px;
+    margin-bottom: 3.5rem;
+    line-height: 2;
+    letter-spacing: 0.05em;
+    font-weight: 300;
+  }
+
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+  .hero-stats {
+    display: flex;
+    gap: 5rem;
+    margin-top: 6rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-direction: row;
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+    background: none;
+    -webkit-text-fill-color: var(--gold);
+  }
+  .stat-label {
+    font-size: 0.58rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 400;
+  }
+
+  /* ── TICKER ── */
+  .ticker-wrap {
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0.9rem 0;
+    white-space: nowrap;
+  }
+  .ticker-inner {
+    display: inline-flex;
+    gap: 3rem;
+    animation: ticker 45s linear infinite;
+  }
+  .ticker-inner span {
+    color: var(--muted);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0 2rem;
+  }
+  .ticker-inner span strong { color: var(--gold); font-weight: 400; }
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ── GALLERY ── */
+  .gallery-section { max-width: 1280px; margin: 0 auto; padding: 7rem 3rem; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .section-title span { color: var(--gold); font-style: italic; font-weight: 300; }
+
+  #search-box {
+    padding: 0.5rem 1rem;
+    border-radius: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 0.65rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    letter-spacing: 0.12em;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-weight: 300;
+  }
+  #search-box:focus { border-color: var(--gold); }
+  #search-box::placeholder { color: var(--muted); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    position: relative;
+    background: var(--bg);
+    border: none;
+    border-radius: 0;
+    overflow: hidden;
+    transition: background 0.25s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1;
+  }
+  .card:hover { background: var(--bg3); }
+  .card:hover::before { opacity: 1; }
+
+  .card-preview {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg3);
+  }
+  .card-preview img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.65;
+    filter: grayscale(30%);
+    transition: opacity 0.4s, transform 0.5s, filter 0.4s;
+  }
+  .card:hover .card-preview img { opacity: 0.9; transform: scale(1.04); filter: grayscale(0); }
+
+  .card-preview-placeholder {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 300;
+    letter-spacing: 0.4em;
+    background: var(--bg3);
+    color: var(--border);
+  }
+
+  .card-body {
+    padding: 1.75rem 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+
+  .card-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    line-height: 1.8;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-author {
+    font-size: 0.58rem;
+    font-weight: 400;
+    color: var(--gold);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 65%;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+
+  .card-date { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .card-arrow {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 22px; height: 22px;
+    border: 1px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s;
+    font-size: 0.65rem;
+    color: var(--gold);
+    background: transparent;
+    z-index: 1;
+  }
+  .card:hover .card-arrow { opacity: 1; }
+
+  .state-msg {
+    text-align: center;
+    color: var(--muted);
+    padding: 6rem 2rem;
+    grid-column: 1 / -1;
+    background: var(--bg);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .state-msg .icon { font-size: 1.5rem; margin-bottom: 1.5rem; opacity: 0.3; }
+
+  /* ── HOW IT WORKS ── */
+  .how-section {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8rem 3rem;
+  }
+  .how-inner { max-width: 1100px; margin: 0 auto; }
+  .how-inner h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2.8rem;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+  .how-sub {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 5rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .step {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    padding: 3rem 2.5rem;
+  }
+  .step:last-child { border-right: none; }
+
+  .step-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    display: block;
+    width: auto; height: auto;
+    border-radius: 0;
+    background: none;
+  }
+
+  .step h3 {
+    font-size: 0.65rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .step p { font-size: 0.78rem; color: var(--muted); line-height: 1.85; font-weight: 300; }
+
+  /* ── MISSION ── */
+  .mission-section {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 9rem 2rem;
+    text-align: center;
+  }
+  .mission-section::before {
+    content: '✦';
+    display: block;
+    color: var(--gold);
+    font-size: 0.8rem;
+    margin-bottom: 3.5rem;
+    letter-spacing: 0.8em;
+    opacity: 0.5;
+  }
+  .mission-section h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 3rem;
+    font-weight: 300;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .mission-section p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 2.1;
+    margin-bottom: 1.25rem;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+  }
+  .creator-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 0.6rem;
+    margin-top: 2.5rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    transition: opacity 0.25s;
+    border-bottom: none;
+    font-weight: 400;
+  }
+  .creator-link:hover { opacity: 1; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.6rem;
+    background: var(--bg);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--gold); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .steps { grid-template-columns: 1fr 1fr; }
+    .step:nth-child(2) { border-right: none; }
+    .step:nth-child(1), .step:nth-child(2) { border-bottom: 1px solid var(--border); }
+  }
+  @media (max-width: 640px) {
+    nav { padding: 1.25rem 1.5rem; }
+    .nav-links { gap: 1.25rem; }
+    .hero { min-height: auto; padding: 5rem 1.5rem 4rem; }
+    .hero-stats { gap: 2.5rem; }
+    .gallery-section { padding: 4rem 1.5rem; }
+    .how-section { padding: 5rem 1.5rem; }
+    .mission-section { padding: 6rem 1.5rem; }
+    .section-header { flex-direction: column; align-items: flex-start; }
+    #search-box { width: 100%; }
+    .steps { grid-template-columns: 1fr; }
+    .step { border-right: none; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="/">✦ <span>claude</span>slides</a>
+  <div class="nav-links">
+    <a href="#gallery">Gallery</a>
+    <a href="#how">How it works</a>
+    <a href="https://github.com/flightlesstux/claudeslides" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn btn-primary" href="/contribute/" target="_blank" rel="noopener">+ Submit yours</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-badge">✦ Open Source Gallery</div>
+
+  <h1>What the world<br>built with <span class="grad">Claude AI</span></h1>
+
+  <p>
+    An open gallery for everyone — kids, grandparents, teachers, developers —
+    to share what they created, learned, or solved with Claude AI.
+    No gatekeeping. Just curiosity.
+  </p>
+
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#gallery">Explore the gallery</a>
+    <a class="btn btn-outline" href="/contribute/" target="_blank" rel="noopener">How to contribute</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num" id="stat-count">—</div>
+      <div class="stat-label">Submissions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Stories to tell</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Prerequisites</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap" id="ticker-wrap">
+  <div class="ticker-inner" id="ticker">
+    <span>Loading contributions…</span>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<section class="gallery-section" id="gallery">
+  <div class="section-header">
+    <h2 class="section-title">All <span>contributions</span></h2>
+    <input id="search-box" type="search" placeholder="Search by title or author…" autocomplete="off">
+  </div>
+  <div class="grid" id="grid">
+    <div class="state-msg">
+      <div class="icon">⏳</div>
+      <div>Loading submissions…</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="how-inner">
+    <h2>How to add your story</h2>
+    <p class="how-sub">Four steps. No experience required. If you used Claude, it counts.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Fork the repo</h3>
+        <p>Click Fork on GitHub. You get your own copy of the project instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Create your folder</h3>
+        <p>Add <code>author/your-name/index.html</code> — one self-contained HTML file.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Make it yours</h3>
+        <p>Design it however you like. Tell your story. Show what Claude helped you build.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Open a PR</h3>
+        <p>Submit a pull request. Automated checks run, then a maintainer reviews and merges.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section class="mission-section">
+  <h2>Everyone has a story worth sharing</h2>
+  <p>
+    We believe the future of coding belongs to everyone.
+    Kids will debug their homework. Grandparents will organize their recipes.
+    Teachers will build lesson plans. Housewives will start businesses.
+    This gallery is proof that it's already happening.
+  </p>
+  <p>
+    claudeslides is a living archive of human creativity, amplified by AI.
+    Every contribution — no matter how small — shows someone else what's possible.
+  </p>
+  <a class="creator-link" href="https://linkedin.com/in/ercanermis" target="_blank" rel="noopener">
+    → Created by Ercan Ermis
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    <a href="https://github.com/flightlesstux/claudeslides" target="_blank" rel="noopener">Open source on GitHub</a>
+    &nbsp;·&nbsp;
+    <a href="/contribute/" target="_blank" rel="noopener">Contribute</a>
+    &nbsp;·&nbsp;
+    <a href="https://linkedin.com/in/ercanermis" target="_blank" rel="noopener">Ercan Ermis</a>
+  </p>
+  <p style="margin-top:0.75rem;opacity:0.35">Made with ❤️ in the Netherlands 🇳🇱 &nbsp;&middot;&nbsp; by Ercan Ermis &nbsp;&middot;&nbsp; Built with Claude ✦</p>
+</footer>
+
+<script>
+(async () => {
+  const grid = document.getElementById('grid');
+  const statCount = document.getElementById('stat-count');
+  const searchBox = document.getElementById('search-box');
+  const ticker = document.getElementById('ticker');
+
+  let allSubmissions = [];
+
+  // Fetch submissions
+  try {
+    const res = await fetch('submissions.json?v=' + Date.now());
+    if (!res.ok) throw new Error('not found');
+    allSubmissions = await res.json();
+  } catch {
+    grid.innerHTML = `<div class="state-msg">
+      <div class="icon">📂</div>
+      <div>No submissions yet — <a href="/contribute/" style="color:var(--accent)">be the first!</a></div>
+    </div>`;
+    statCount.textContent = '0';
+    return;
+  }
+
+  statCount.textContent = allSubmissions.length;
+
+  // Build ticker
+  if (allSubmissions.length > 0) {
+    const items = [...allSubmissions, ...allSubmissions]; // duplicate for seamless loop
+    ticker.innerHTML = items.map(s =>
+      `<span><strong>${escHtml(s.author)}</strong> — ${escHtml(s.title)}</span>`
+    ).join('');
+  }
+
+  // Render cards
+  function renderCards(list) {
+    if (list.length === 0) {
+      grid.innerHTML = `<div class="state-msg"><div class="icon">🔍</div><div>No results found.</div></div>`;
+      return;
+    }
+    grid.innerHTML = list.map(s => cardHtml(s)).join('');
+  }
+
+  renderCards(allSubmissions);
+
+  // Search
+  searchBox.addEventListener('input', () => {
+    const q = searchBox.value.trim().toLowerCase();
+    if (!q) { renderCards(allSubmissions); return; }
+    renderCards(allSubmissions.filter(s =>
+      s.title.toLowerCase().includes(q) ||
+      s.author.toLowerCase().includes(q) ||
+      (s.description || '').toLowerCase().includes(q)
+    ));
+  });
+
+  function cardHtml(s) {
+    const imgSrc = s.cover_url || s.og_image || '';
+    const preview = imgSrc
+      ? `<img src="${escHtml(imgSrc)}" alt="${escHtml(s.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-preview-placeholder>✦</div>'">`
+      : `<div class="card-preview-placeholder">✦</div>`;
+
+    const date = s.date
+      ? new Date(s.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+      : '';
+
+    return `<a class="card" href="${escHtml(s.url)}" target="_blank" rel="noopener">
+      <div class="card-arrow">↗</div>
+      <div class="card-preview">${preview}</div>
+      <div class="card-body">
+        <div class="card-title">${escHtml(s.title)}</div>
+        ${s.description ? `<div class="card-desc">${escHtml(s.description)}</div>` : ''}
+        <div class="card-footer">
+          <span class="card-author">${escHtml(s.author)}</span>
+          ${date ? `<span class="card-date">${date}</span>` : ''}
+        </div>
+      </div>
+    </a>`;
+  }
+
+  function escHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+})();
+</script>
+</body>
+</html>
