@@ -60,26 +60,36 @@ def main():
 
     submissions = []
 
-    for slug_dir in sorted(author_dir.iterdir()):
-        if not slug_dir.is_dir():
+    for author_subdir in sorted(author_dir.iterdir()):
+        if not author_subdir.is_dir():
             continue
-        html_file = slug_dir / "index.html"
-        if not html_file.exists():
-            continue
+        for slide_dir in sorted(author_subdir.iterdir()):
+            if not slide_dir.is_dir():
+                continue
+            html_file = slide_dir / "index.html"
+            if not html_file.exists():
+                continue
 
-        html = html_file.read_text(encoding="utf-8", errors="replace")
-        slug = slug_dir.name
+            html = html_file.read_text(encoding="utf-8", errors="replace")
+            author_slug = author_subdir.name
+            slide_slug  = slide_dir.name
 
-        entry = {
-            "slug": slug,
-            "url": f"author/{slug}/",
-            "title": extract_title(html) or slug,
-            "author": extract_meta(html, "author") or slug,
-            "description": extract_meta(html, "description") or "",
-            "og_image": extract_og_image(html),
-            "date": git_date(html_file),
-        }
-        submissions.append(entry)
+            og_image   = extract_og_image(html)
+            cover_file = repo_root / "covers" / author_slug / f"{slide_slug}.jpg"
+            cover_url  = og_image or (f"covers/{author_slug}/{slide_slug}.jpg" if cover_file.exists() else "")
+
+            entry = {
+                "author_slug": author_slug,
+                "slug":        slide_slug,
+                "url":         f"author/{author_slug}/{slide_slug}/",
+                "title":       extract_title(html) or slide_slug,
+                "author":      extract_meta(html, "author") or author_slug,
+                "description": extract_meta(html, "description") or "",
+                "og_image":    og_image,
+                "cover_url":   cover_url,
+                "date":        git_date(html_file),
+            }
+            submissions.append(entry)
 
     # Newest first
     submissions.sort(key=lambda x: x["date"], reverse=True)

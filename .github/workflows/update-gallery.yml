@@ -25,17 +25,28 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: |
+          pip install Pillow
+          sudo apt-get install -y fonts-liberation
+
+      - name: Generate covers
+        run: python .github/scripts/generate_covers.py
+
       - name: Generate submissions.json
         run: python .github/scripts/generate_submissions.py
+
+      - name: Generate sitemap.xml
+        run: python .github/scripts/generate_sitemap.py
 
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add submissions.json
+          git add submissions.json covers/ sitemap.xml
           if git diff --cached --quiet; then
-            echo "No changes to submissions.json"
+            echo "No changes"
           else
-            git commit -m "chore: regenerate submissions.json [skip ci]"
+            git commit -m "chore: regenerate submissions, covers, and sitemap [skip ci]"
             git push
           fi
