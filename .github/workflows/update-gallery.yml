@@ -1,0 +1,41 @@
+name: Update Gallery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "author/**"
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    name: Regenerate submissions.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for git log dates in script
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate submissions.json
+        run: python .github/scripts/generate_submissions.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add submissions.json
+          if git diff --cached --quiet; then
+            echo "No changes to submissions.json"
+          else
+            git commit -m "chore: regenerate submissions.json [skip ci]"
+            git push
+          fi
