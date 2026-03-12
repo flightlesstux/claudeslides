@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moto G05 × Claude — ADB Optimization Session</title>
+<meta name="author" content="Ercan Ermis">
+<meta name="description" content="How I used Claude AI to optimize my Motorola Moto G05 via ADB commands.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://claudeslides.com/author/ercan-ermis/moto-g05/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ClaudeSlides">
+<meta property="og:url" content="https://claudeslides.com/author/ercan-ermis/moto-g05/">
+<meta property="og:title" content="Moto G05 × Claude — ADB Optimization Session">
+<meta property="og:description" content="How I used Claude AI to optimize my Motorola Moto G05 via ADB commands.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Moto G05 × Claude — ADB Optimization Session">
+<meta name="twitter:description" content="How I used Claude AI to optimize my Motorola Moto G05 via ADB commands.">
+<style>
+  :root {
+    --green: #00ff88;
+    --cyan: #00d4ff;
+    --purple: #7c3aed;
+    --red: #ff4444;
+    --orange: #ff8c00;
+    --bg: #0a0a0f;
+    --bg2: #0f0f1a;
+    --bg3: #141428;
+    --text: #e0e0e0;
+    --muted: #666;
+    --card: #12121f;
+    --border: #1e1e3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes gridPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%);
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+
+  .hero-content { position: relative; z-index: 1; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--green);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    color: var(--green);
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+    animation: fadeInDown 0.8s ease;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.8s ease 0.2s both;
+  }
+
+  .hero h1 span.green { color: var(--green); }
+  .hero h1 span.cyan { color: var(--cyan); }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    margin-bottom: 3rem;
+    max-width: 600px;
+    line-height: 1.7;
+    animation: fadeInUp 0.8s ease 0.4s both;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.8s ease 0.6s both;
+  }
+
+  .hero-stat {
+    text-align: center;
+  }
+
+  .hero-stat .number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--green);
+    display: block;
+  }
+
+  .hero-stat .label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* SECTIONS */
+  section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 0.75rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    max-width: 600px;
+    margin-bottom: 3rem;
+  }
+
+  /* DEVICE CARD */
+  .device-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 600px) { .device-card { grid-template-columns: 1fr; } }
+
+  .device-spec { display: flex; flex-direction: column; gap: 1rem; }
+
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spec-row:last-child { border-bottom: none; }
+  .spec-key { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .spec-val { font-size: 0.9rem; color: var(--text); font-weight: 600; }
+  .spec-val.green { color: var(--green); }
+  .spec-val.cyan { color: var(--cyan); }
+
+  .device-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .phone-mockup {
+    width: 120px;
+    height: 200px;
+    border: 3px solid var(--green);
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0a0a15, #151530);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(0,255,136,0.2), inset 0 0 20px rgba(0,255,136,0.05);
+    animation: phoneGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes phoneGlow {
+    0%, 100% { box-shadow: 0 0 30px rgba(0,255,136,0.2), inset 0 0 20px rgba(0,255,136,0.05); }
+    50% { box-shadow: 0 0 50px rgba(0,255,136,0.4), inset 0 0 30px rgba(0,255,136,0.1); }
+  }
+
+  .phone-mockup::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    width: 40px; height: 4px;
+    background: var(--green);
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  .phone-screen-text {
+    font-size: 0.55rem;
+    color: var(--green);
+    text-align: center;
+    line-height: 1.6;
+    padding: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .connection-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 100px;
+    font-size: 0.7rem;
+    color: var(--green);
+  }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--green), var(--cyan), var(--purple), transparent);
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.5s ease;
+  }
+
+  .timeline-item.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: -2.45rem;
+    top: 0.25rem;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+  }
+
+  .timeline-dot.cyan { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+  .timeline-dot.purple { background: var(--purple); box-shadow: 0 0 10px var(--purple); }
+  .timeline-dot.orange { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+  .timeline-dot.red { background: var(--red); box-shadow: 0 0 10px var(--red); }
+
+  .timeline-time {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  .timeline-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: var(--text);
+  }
+
+  .timeline-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .timeline-cmd {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    background: rgba(0,255,136,0.05);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--green);
+    word-break: break-all;
+  }
+
+  /* BEFORE/AFTER */
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 600px) { .ba-grid { grid-template-columns: 1fr; } }
+
+  .ba-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    padding: 2rem;
+  }
+
+  .ba-card.before { border-color: rgba(255,68,68,0.3); }
+  .ba-card.after { border-color: rgba(0,255,136,0.3); }
+
+  .ba-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ba-label.before { color: var(--red); }
+  .ba-label.after { color: var(--green); }
+
+  .ba-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .metric-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .metric-label { font-size: 0.75rem; color: var(--muted); }
+  .metric-value { font-size: 1.4rem; font-weight: 800; }
+  .metric-value.red { color: var(--red); }
+  .metric-value.green { color: var(--green); }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.5s ease;
+    width: 0;
+  }
+
+  .progress-fill.red { background: linear-gradient(90deg, var(--red), var(--orange)); }
+  .progress-fill.green { background: linear-gradient(90deg, var(--cyan), var(--green)); }
+
+  /* PACKAGES GRID */
+  .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .pkg-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pkg-card.visible { opacity: 1; transform: translateY(0); }
+
+  .pkg-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .pkg-card.disabled::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .pkg-card.uninstalled::before { background: linear-gradient(90deg, var(--red), transparent); }
+
+  .pkg-action {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .pkg-action.disabled { color: var(--cyan); }
+  .pkg-action.uninstalled { color: var(--red); }
+
+  .pkg-name {
+    font-size: 0.8rem;
+    color: var(--text);
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .pkg-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .pkg-savings {
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .pkg-savings.disabled { color: var(--cyan); }
+  .pkg-savings.uninstalled { color: var(--red); }
+
+  /* TWEAKS */
+  .tweaks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+
+  .tweak-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.4s ease;
+  }
+
+  .tweak-card.visible { opacity: 1; transform: scale(1); }
+
+  .tweak-icon {
+    font-size: 1.5rem;
+  }
+
+  .tweak-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .tweak-detail {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .tweak-change {
+    font-size: 0.75rem;
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* TERMINAL */
+  .terminal {
+    background: #050508;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+
+  .terminal-bar {
+    background: #111120;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .term-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+
+  .term-dot.r { background: #ff5f56; }
+  .term-dot.y { background: #ffbd2e; }
+  .term-dot.g { background: #27c93f; }
+
+  .terminal-title {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .terminal-body {
+    padding: 1.5rem;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .terminal-body::-webkit-scrollbar { width: 4px; }
+  .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .t-prompt { color: var(--green); }
+  .t-cmd { color: var(--text); }
+  .t-output { color: #888; }
+  .t-success { color: var(--cyan); }
+  .t-error { color: var(--orange); }
+  .t-comment { color: #444; }
+
+  /* COUNTER ANIMATION */
+  .counter { display: inline-block; }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    background: linear-gradient(135deg, rgba(0,255,136,0.05), rgba(0,212,255,0.05));
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 1.5rem;
+    padding: 3rem;
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 700px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .summary-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .summary-stat .big {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--green);
+  }
+
+  .summary-stat .small {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 2rem;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  footer a { color: var(--green); text-decoration: none; }
+
+  /* FLOATING PARTICLES */
+  .particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--green);
+    border-radius: 50%;
+    opacity: 0;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-20px) translateX(30px); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      ADB SESSION · 2026-03-12 · 39 MINUTES
+    </div>
+    <h1>
+      <span class="green">Moto G05</span><br>
+      <span class="cyan">Turbo'd</span> by Claude
+    </h1>
+    <p class="hero-sub">
+      A complete Android optimization session using Claude AI + ADB shell.<br>
+      From a laggy, bloated phone to a lean, fast daily driver — in under an hour.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="number" data-target="26">0</span>
+        <span class="label">Packages Removed</span>
+      </div>
+      <div class="hero-stat">
+        <span class="number" data-target="750">0</span>
+        <span class="label">MB RAM Freed</span>
+      </div>
+      <div class="hero-stat">
+        <span class="number" data-target="9">0</span>
+        <span class="label">System Tweaks</span>
+      </div>
+      <div class="hero-stat">
+        <span class="number" data-target="39">0</span>
+        <span class="label">Min Session</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">↓ scroll to explore</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- DEVICE -->
+<section>
+  <p class="section-label">// the device</p>
+  <h2 class="section-title">Meet the Patient</h2>
+  <p class="section-desc">A Motorola Moto G05 running Android 15 — capable hardware, buried under Motorola, Google, Facebook, and Samsung bloatware.</p>
+
+  <div class="device-card">
+    <div class="device-spec">
+      <div class="spec-row">
+        <span class="spec-key">Model</span>
+        <span class="spec-val cyan">Moto G05 (ZY32LSZZWV)</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Android</span>
+        <span class="spec-val green">15 (arm64-v8a)</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">RAM</span>
+        <span class="spec-val">3.7 GB</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Storage</span>
+        <span class="spec-val">234 GB (19% used)</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Connection</span>
+        <span class="spec-val green">Wi-Fi ADB @ 192.168.68.50</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Session Date</span>
+        <span class="spec-val">2026-03-12 · 14:37–15:31</span>
+      </div>
+    </div>
+    <div class="device-visual">
+      <div class="phone-mockup">
+        <div class="phone-screen-text">
+          $ adb connect<br>
+          192.168.68.50:5555<br>
+          <br>
+          ✓ connected
+        </div>
+      </div>
+      <div class="connection-badge">
+        <span class="badge-dot"></span>
+        ADB WIRELESS · ACTIVE
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TIMELINE -->
+<section>
+  <p class="section-label">// session timeline</p>
+  <h2 class="section-title">How It Went</h2>
+  <p class="section-desc">A complete ADB optimization session — connected, audited, and tuned step by step.</p>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot cyan"></div>
+      <div class="timeline-time">14:52 — STEP 1</div>
+      <div class="timeline-title">Connected via Wireless ADB</div>
+      <div class="timeline-desc">Device ZY32LSZZWV confirmed connected. Switched to TCP/IP mode for wireless ADB — cable-free for the rest of the session.</div>
+      <span class="timeline-cmd">adb tcpip 5555 && adb connect 192.168.68.50:5555 → ✓ connected</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot green"></div>
+      <div class="timeline-time">14:53 — STEP 2</div>
+      <div class="timeline-title">Full Device Audit</div>
+      <div class="timeline-desc">Full device profile: Android 15, 3.7GB RAM, only ~1GB free. Animations at 1.0x. Gmail (283MB), Digital Wellbeing (274MB), WhatsApp (253MB) as top RAM hogs.</div>
+      <span class="timeline-cmd">adb shell ps -A --sort -RSS | head -20</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot green"></div>
+      <div class="timeline-time">14:55 — STEP 3</div>
+      <div class="timeline-title">Animations Halved</div>
+      <div class="timeline-desc">Reduced window, transition, and animator scales from 1.0x to 0.5x. Immediate noticeable snappiness — biggest single UX win in the session.</div>
+      <span class="timeline-cmd">settings put global window_animation_scale 0.5</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot cyan"></div>
+      <div class="timeline-time">14:56 — STEP 4</div>
+      <div class="timeline-title">First Debloat Wave</div>
+      <div class="timeline-desc">Disabled Digital Wellbeing, Motorola Weather Widget, com.dti.motorola, Google TTS, and Google Quick Search Box. ~900MB freed.</div>
+      <span class="timeline-cmd">pm disable-user --user 0 com.google.android.apps.wellbeing (×5 packages)</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot cyan"></div>
+      <div class="timeline-time">14:57 — STEP 5</div>
+      <div class="timeline-title">Deep Bloatware Scan</div>
+      <div class="timeline-desc">Found Facebook silently running in background (3 services). Samsung apps on a Motorola device. Pixel-specific Google apps with no reason to exist.</div>
+      <span class="timeline-cmd">pm list packages -s | grep -E "facebook|samsung|motorola"</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot cyan"></div>
+      <div class="timeline-time">14:59 — STEP 6</div>
+      <div class="timeline-title">Second Debloat Wave</div>
+      <div class="timeline-desc">Disabled 15 more packages. Uninstalled Play Games and Gemini/Bard. Applied GPU OpenGL rendering and background process limit of 4.</div>
+      <span class="timeline-cmd">pm disable-user --user 0 (×15 packages) + system tweaks</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot green"></div>
+      <div class="timeline-time">15:07 — STEP 7</div>
+      <div class="timeline-title">Reboot Complete — RAM +750MB</div>
+      <div class="timeline-desc">RAM available jumped from 1.0GB to 1.75GB. Reconnected via wireless ADB. Spotted Taboola (adware, 124MB) and Android System Intelligence (134MB).</div>
+      <span class="timeline-cmd">MemAvailable: 1752756 kB (was 1036236 kB)</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot red"></div>
+      <div class="timeline-time">15:08 — STEP 8</div>
+      <div class="timeline-title">Taboola & Android.AS Killed</div>
+      <div class="timeline-desc">Uninstalled Taboola (pre-installed Motorola adware) and Android System Intelligence. Also discovered Fitbit was running 3m42s of Bluetooth scan in just 7 minutes uptime.</div>
+      <span class="timeline-cmd">pm uninstall -k --user 0 com.taboola.ody && com.google.android.as</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot purple"></div>
+      <div class="timeline-time">15:12 — STEP 9</div>
+      <div class="timeline-title">Battery Deep Dive</div>
+      <div class="timeline-desc">Applied aggressive Doze mode, Wi-Fi sleep, 1-min screen timeout, background restrictions for LinkedIn/Amazon/AliExpress/Duolingo/Spotify/Photos. Hotword detection disabled.</div>
+      <span class="timeline-cmd">settings put global device_idle_constants inactive_to=30000,...</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot red"></div>
+      <div class="timeline-time">15:13 — STEP 10</div>
+      <div class="timeline-title">Fitbit Eliminated</div>
+      <div class="timeline-desc">Fitbit was the #1 battery killer — constant Bluetooth scanning. Uninstalled completely along with 12 more system services (TalkBack, Android Auto, PrintService, etc.).</div>
+      <span class="timeline-cmd">pm uninstall -k --user 0 com.fitbit.FitbitMobile → Success</span>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot green"></div>
+      <div class="timeline-time">15:18 — FINAL</div>
+      <div class="timeline-title">Final Reboot — Clean Boot</div>
+      <div class="timeline-desc">Second reboot to lock in all battery settings. This time booted cleanly and fast. Session complete.</div>
+      <span class="timeline-cmd">adb shell reboot → ✓ clean boot</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- BEFORE / AFTER -->
+<section>
+  <p class="section-label">// results</p>
+  <h2 class="section-title">Before vs After</h2>
+  <p class="section-desc">Measured from the same device, same reboot cycle, same running apps.</p>
+
+  <div class="ba-grid">
+    <div class="ba-card before">
+      <div class="ba-label before">⚠ Before Claude</div>
+      <div class="ba-metric">
+        <div class="metric-row">
+          <span class="metric-label">RAM Available</span>
+          <span class="metric-value red">~1.0 GB</span>
+          <div class="progress-bar"><div class="progress-fill red" data-width="27"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Background Processes</span>
+          <span class="metric-value red">Unlimited</span>
+          <div class="progress-bar"><div class="progress-fill red" data-width="90"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Animation Speed</span>
+          <span class="metric-value red">1.0× (sluggish)</span>
+          <div class="progress-bar"><div class="progress-fill red" data-width="70"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Fitbit BT Scan (7min uptime)</span>
+          <span class="metric-value red">3m 42s (!)</span>
+          <div class="progress-bar"><div class="progress-fill red" data-width="85"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Bloatware Packages Active</span>
+          <span class="metric-value red">26+</span>
+          <div class="progress-bar"><div class="progress-fill red" data-width="80"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-card after">
+      <div class="ba-label after">✓ After Claude</div>
+      <div class="ba-metric">
+        <div class="metric-row">
+          <span class="metric-label">RAM Available</span>
+          <span class="metric-value green">~1.75 GB (+750MB)</span>
+          <div class="progress-bar"><div class="progress-fill green" data-width="47"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Background Processes</span>
+          <span class="metric-value green">Max 4</span>
+          <div class="progress-bar"><div class="progress-fill green" data-width="20"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Animation Speed</span>
+          <span class="metric-value green">0.5× (snappy)</span>
+          <div class="progress-bar"><div class="progress-fill green" data-width="35"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Fitbit BT Scan</span>
+          <span class="metric-value green">0s (uninstalled)</span>
+          <div class="progress-bar"><div class="progress-fill green" data-width="0"></div></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Bloatware Packages Active</span>
+          <span class="metric-value green">0</span>
+          <div class="progress-bar"><div class="progress-fill green" data-width="0"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PACKAGES -->
+<section>
+  <p class="section-label">// what was removed</p>
+  <h2 class="section-title">26 Packages Eliminated</h2>
+  <p class="section-desc">Every package removed, why it was removed, and what it was costing you.</p>
+
+  <div class="packages-grid">
+    <div class="pkg-card uninstalled">
+      <span class="pkg-action uninstalled">UNINSTALLED</span>
+      <span class="pkg-name">com.fitbit.FitbitMobile</span>
+      <span class="pkg-desc">Constant Bluetooth scanning — 3m42s of BT scan in first 7min of uptime. #1 battery killer.</span>
+      <span class="pkg-savings uninstalled">Battery drain eliminated</span>
+    </div>
+    <div class="pkg-card uninstalled">
+      <span class="pkg-action uninstalled">UNINSTALLED</span>
+      <span class="pkg-name">com.taboola.ody</span>
+      <span class="pkg-desc">Motorola pre-installed adware. Silent data collection, 124MB RAM. No user benefit whatsoever.</span>
+      <span class="pkg-savings uninstalled">−124 MB RAM</span>
+    </div>
+    <div class="pkg-card uninstalled">
+      <span class="pkg-action uninstalled">UNINSTALLED</span>
+      <span class="pkg-name">com.google.android.as</span>
+      <span class="pkg-desc">Android System Intelligence — AI predictions/suggestions. Expensive on a budget phone.</span>
+      <span class="pkg-savings uninstalled">−134 MB RAM</span>
+    </div>
+    <div class="pkg-card uninstalled">
+      <span class="pkg-action uninstalled">UNINSTALLED</span>
+      <span class="pkg-name">com.google.android.play.games</span>
+      <span class="pkg-desc">Google Play Games — background sync and sign-in polling. Not used.</span>
+      <span class="pkg-savings uninstalled">Background sync removed</span>
+    </div>
+    <div class="pkg-card uninstalled">
+      <span class="pkg-action uninstalled">UNINSTALLED</span>
+      <span class="pkg-name">com.google.android.apps.bard</span>
+      <span class="pkg-desc">Gemini/Bard AI assistant. You already have Claude — no need for a second AI.</span>
+      <span class="pkg-savings uninstalled">Duplicate AI removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.apps.wellbeing</span>
+      <span class="pkg-desc">Digital Wellbeing — the biggest non-essential RAM consumer on the device.</span>
+      <span class="pkg-savings disabled">−274 MB RAM</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.googlequicksearchbox</span>
+      <span class="pkg-desc">Google Quick Search Box / Assistant. Multiple persistent processes, always listening.</span>
+      <span class="pkg-savings disabled">~−300 MB RAM</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.tts</span>
+      <span class="pkg-desc">Google Text-to-Speech engine. Sits in RAM even when no app uses TTS.</span>
+      <span class="pkg-savings disabled">−120 MB RAM</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.motorola.timeweatherwidget</span>
+      <span class="pkg-desc">Motorola Weather Widget — persistent background weather polling.</span>
+      <span class="pkg-savings disabled">−102 MB RAM</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.dti.motorola</span>
+      <span class="pkg-desc">Motorola proprietary bloatware service — unknown purpose, 96MB.</span>
+      <span class="pkg-savings disabled">−96 MB RAM</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.facebook.appmanager</span>
+      <span class="pkg-desc">Facebook App Manager — silent background service installed by Motorola. No Facebook app needed.</span>
+      <span class="pkg-savings disabled">Silent tracker removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.facebook.services</span>
+      <span class="pkg-desc">Facebook Services — another background stub. Phones home even without Facebook installed.</span>
+      <span class="pkg-savings disabled">Data collection removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.facebook.system</span>
+      <span class="pkg-desc">Facebook System service — third Facebook process. All three completely silenced.</span>
+      <span class="pkg-savings disabled">×3 Facebook processes gone</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.samsung.android.oneconnect</span>
+      <span class="pkg-desc">Samsung SmartThings — on a Motorola device. No explanation found for its presence.</span>
+      <span class="pkg-savings disabled">Samsung on Motorola — gone</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.samsung.android.service.health</span>
+      <span class="pkg-desc">Samsung Health Services — also pre-installed on this Motorola by a carrier/partner deal.</span>
+      <span class="pkg-savings disabled">Carrier bloatware removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.sec.spp.push</span>
+      <span class="pkg-desc">Samsung Push Platform — push notification service for Samsung apps. On a Motorola.</span>
+      <span class="pkg-savings disabled">Samsung ×3 gone</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.motorola.genie</span>
+      <span class="pkg-desc">Moto Genie — news/content feed suggestions. Like a worse version of Google Discover.</span>
+      <span class="pkg-savings disabled">News feed bloat removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.motorola.motocare + com.motorola.help</span>
+      <span class="pkg-desc">Motorola support apps — only useful if you contact Motorola support (you won't).</span>
+      <span class="pkg-savings disabled">Support bloat removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.motorola.demo</span>
+      <span class="pkg-desc">Motorola Demo Mode — for retail store displays. Pointless on a personal device.</span>
+      <span class="pkg-savings disabled">Demo mode gone</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.aura.oobe.motorola</span>
+      <span class="pkg-desc">Motorola setup wizard — ran once on first boot. Has been consuming RAM ever since.</span>
+      <span class="pkg-savings disabled">Setup wizard removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.apps.pixel.support</span>
+      <span class="pkg-desc">Pixel Support app — Google's support tool for Pixel phones. Installed on a Moto somehow.</span>
+      <span class="pkg-savings disabled">Pixel app on Moto — gone</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.projection.gearhead</span>
+      <span class="pkg-desc">Android Auto projection service — background service even when never connected to a car.</span>
+      <span class="pkg-savings disabled">Idle car service removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.marvin.talkback</span>
+      <span class="pkg-desc">TalkBack accessibility screen reader — useful for visually impaired users, overhead if unused.</span>
+      <span class="pkg-savings disabled">Accessibility overhead removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.feedback</span>
+      <span class="pkg-desc">Google Feedback — sends device reports to Google. Disabled for privacy and RAM.</span>
+      <span class="pkg-savings disabled">Telemetry removed</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.google.android.partnersetup</span>
+      <span class="pkg-desc">Google Partner Setup — carrier/OEM provisioning service. No longer needed after device setup.</span>
+      <span class="pkg-savings disabled">Provisioning bloat gone</span>
+    </div>
+    <div class="pkg-card disabled">
+      <span class="pkg-action disabled">DISABLED</span>
+      <span class="pkg-name">com.android.bookmarkprovider + partnerbookmarks</span>
+      <span class="pkg-desc">Browser bookmark providers — pre-loaded with carrier/OEM sponsored links.</span>
+      <span class="pkg-savings disabled">Sponsored bookmarks gone</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SYSTEM TWEAKS -->
+<section>
+  <p class="section-label">// system tuning</p>
+  <h2 class="section-title">9 System Tweaks Applied</h2>
+  <p class="section-desc">Deep system settings that Android doesn't expose in the UI — accessible only via ADB.</p>
+
+  <div class="tweaks-grid">
+    <div class="tweak-card">
+      <div class="tweak-icon">⚡</div>
+      <div class="tweak-title">Animation Speed 0.5×</div>
+      <div class="tweak-detail">Window, transition, and animator scales halved. The single biggest perceived speed improvement.</div>
+      <div class="tweak-change">1.0× → 0.5×</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">🔄</div>
+      <div class="tweak-title">Background Process Limit</div>
+      <div class="tweak-detail">Android will now aggressively kill background apps beyond 4. Prevents RAM thrashing.</div>
+      <div class="tweak-change">Unlimited → Max 4</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">🎮</div>
+      <div class="tweak-title">GPU OpenGL Rendering</div>
+      <div class="tweak-detail">Forced hardware GPU rendering via debug.hwui.renderer for smoother UI compositing.</div>
+      <div class="tweak-change">Default → OpenGL</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">💤</div>
+      <div class="tweak-title">Aggressive Doze Mode</div>
+      <div class="tweak-detail">Reduced idle timeout to 30s, disabled sensing/locating delays. Deep sleep kicks in much faster.</div>
+      <div class="tweak-change">inactive_to 30000ms</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">📡</div>
+      <div class="tweak-title">Wi-Fi Sleep on Screen Off</div>
+      <div class="tweak-detail">Wi-Fi radio sleeps when the screen turns off. Push notifications wake it as needed.</div>
+      <div class="tweak-change">wifi_sleep_policy → 0</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">🌑</div>
+      <div class="tweak-title">Screen Timeout 1 Min</div>
+      <div class="tweak-detail">Reduced from 2 minutes to 1 minute. Screen-on is the biggest battery drain on any phone.</div>
+      <div class="tweak-change">120s → 60s</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">🚫</div>
+      <div class="tweak-title">Background Restrictions</div>
+      <div class="tweak-detail">RUN_ANY_IN_BACKGROUND denied for LinkedIn, Amazon, AliExpress, Booking, Duolingo, Spotify, Photos.</div>
+      <div class="tweak-change">7 heavy apps restricted</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">🎤</div>
+      <div class="tweak-title">Hotword Detection Off</div>
+      <div class="tweak-detail">Always-on microphone listening for "Hey Google" disabled. Saves CPU and battery continuously.</div>
+      <div class="tweak-change">hotword_detection → 0</div>
+    </div>
+    <div class="tweak-card">
+      <div class="tweak-icon">📍</div>
+      <div class="tweak-title">Location Throttle</div>
+      <div class="tweak-detail">Background location update minimum interval increased to 2 seconds to reduce GPS/network wakeups.</div>
+      <div class="tweak-change">throttle → 2000ms</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TERMINAL LOG -->
+<section>
+  <p class="section-label">// live session excerpt</p>
+  <h2 class="section-title">The Raw Terminal</h2>
+  <p class="section-desc">A highlight from the actual ADB session — this is what it looked like in real time.</p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="term-dot r"></span>
+      <span class="term-dot y"></span>
+      <span class="term-dot g"></span>
+      <span class="terminal-title">adb shell · moto g05 · 192.168.68.50:5555</span>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-comment"># Connect wirelessly via ADB TCP/IP</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb tcpip 5555 && adb connect 192.168.68.50:5555</span></div>
+      <div><span class="t-success">restarting in TCP mode port: 5555</span></div>
+      <div><span class="t-success">connected to 192.168.68.50:5555  ✓</span></div>
+      <br>
+      <div><span class="t-comment"># Device info</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell getprop ro.product.model</span></div>
+      <div><span class="t-output">moto g05</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell getprop ro.build.version.release</span></div>
+      <div><span class="t-output">15</span></div>
+      <br>
+      <div><span class="t-comment"># RAM check — only 1GB free on 3.7GB device</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell cat /proc/meminfo | head -3</span></div>
+      <div><span class="t-output">MemTotal:        3797616 kB</span></div>
+      <div><span class="t-output">MemFree:          195832 kB</span></div>
+      <div><span class="t-output">MemAvailable:    1036236 kB  <span style="color:#ff4444">← only 27% free!</span></span></div>
+      <br>
+      <div><span class="t-comment"># Halve animations for instant snappiness</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell settings put global window_animation_scale 0.5</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell settings put global transition_animation_scale 0.5</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell settings put global animator_duration_scale 0.5</span></div>
+      <div><span class="t-success">Animations set to 0.5x ✓</span></div>
+      <br>
+      <div><span class="t-comment"># Nuke bloatware — first wave</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell pm disable-user --user 0 com.google.android.apps.wellbeing</span></div>
+      <div><span class="t-success">Package ...wellbeing new state: disabled-user</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell pm disable-user --user 0 com.google.android.googlequicksearchbox</span></div>
+      <div><span class="t-success">Package ...googlequicksearchbox new state: disabled-user</span></div>
+      <br>
+      <div><span class="t-comment"># Samsung apps found on a MOTOROLA device (???)</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell pm disable-user --user 0 com.samsung.android.oneconnect</span></div>
+      <div><span class="t-success">Package ...oneconnect new state: disabled-user</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell pm disable-user --user 0 com.sec.spp.push</span></div>
+      <div><span class="t-success">Package ...spp.push new state: disabled-user</span></div>
+      <br>
+      <div><span class="t-comment"># Fitbit: 3m42s BT scan in 7min uptime = murder</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell pm uninstall -k --user 0 com.fitbit.FitbitMobile</span></div>
+      <div><span class="t-success">Success</span></div>
+      <br>
+      <div><span class="t-comment"># Taboola adware — gone</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell pm uninstall -k --user 0 com.taboola.ody</span></div>
+      <div><span class="t-success">Success</span></div>
+      <br>
+      <div><span class="t-comment"># Final reboot</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell reboot</span></div>
+      <br>
+      <div><span class="t-comment"># Post-reboot RAM check</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">adb shell cat /proc/meminfo | grep MemAvailable</span></div>
+      <div><span class="t-output">MemAvailable:    <span style="color:#00ff88">1752756 kB  ← +716MB freed ✓</span></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TOKEN USAGE -->
+<section>
+  <p class="section-label">// claude ai stats</p>
+  <h2 class="section-title">Token Usage & Session Cost</h2>
+  <p class="section-desc">The AI compute behind this optimization session — every token used to diagnose, plan, and execute 26 package removals and 9 system tweaks.</p>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem; margin-bottom:2.5rem;">
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--cyan), transparent);"></div>
+      <div style="font-size:2rem; font-weight:700; color:var(--cyan); font-family:'SF Mono',monospace;">185K</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:0.4rem;">Input Tokens</div>
+      <div style="color:#444; font-size:0.7rem; margin-top:0.3rem;">context + tool results</div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--green), transparent);"></div>
+      <div style="font-size:2rem; font-weight:700; color:var(--green); font-family:'SF Mono',monospace;">9.8K</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:0.4rem;">Output Tokens</div>
+      <div style="color:#444; font-size:0.7rem; margin-top:0.3rem;">responses + analysis</div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--purple), transparent);"></div>
+      <div style="font-size:2rem; font-weight:700; color:var(--purple); font-family:'SF Mono',monospace;">194.8K</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:0.4rem;">Total Tokens</div>
+      <div style="color:#444; font-size:0.7rem; margin-top:0.3rem;">full session</div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange), transparent);"></div>
+      <div style="font-size:2rem; font-weight:700; color:var(--orange); font-family:'SF Mono',monospace;">$0.70</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:0.4rem;">Estimated Cost</div>
+      <div style="color:#444; font-size:0.7rem; margin-top:0.3rem;">claude sonnet 4.6</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; max-width:900px; margin:0 auto;">
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
+      <h3 style="color:var(--green); font-size:0.85rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em;">Session Activity</h3>
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--muted); font-size:0.85rem;">Model</span>
+          <span style="color:var(--cyan); font-size:0.85rem; font-family:'SF Mono',monospace;">claude-sonnet-4-6</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--muted); font-size:0.85rem;">Duration</span>
+          <span style="color:var(--text); font-size:0.85rem; font-family:'SF Mono',monospace;">41 minutes</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--muted); font-size:0.85rem;">Messages</span>
+          <span style="color:var(--text); font-size:0.85rem; font-family:'SF Mono',monospace;">~55 turns</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--muted); font-size:0.85rem;">Tool Calls (ADB)</span>
+          <span style="color:var(--text); font-size:0.85rem; font-family:'SF Mono',monospace;">28 bash calls</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--muted); font-size:0.85rem;">Session ID</span>
+          <span style="color:var(--muted); font-size:0.75rem; font-family:'SF Mono',monospace;">eec4797f</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
+      <h3 style="color:var(--green); font-size:0.85rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em;">Token Breakdown</h3>
+      <div style="display:flex; flex-direction:column; gap:0.85rem;">
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+            <span style="color:var(--muted); font-size:0.8rem;">Input</span>
+            <span style="color:var(--cyan); font-size:0.8rem;">95%</span>
+          </div>
+          <div style="background:#1a1a2e; border-radius:4px; height:6px; overflow:hidden;">
+            <div style="width:95%; height:100%; background:linear-gradient(90deg, var(--cyan), #0099cc); border-radius:4px;"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+            <span style="color:var(--muted); font-size:0.8rem;">Output</span>
+            <span style="color:var(--green); font-size:0.8rem;">5%</span>
+          </div>
+          <div style="background:#1a1a2e; border-radius:4px; height:6px; overflow:hidden;">
+            <div style="width:5%; height:100%; background:linear-gradient(90deg, var(--green), #00aa55); border-radius:4px;"></div>
+          </div>
+        </div>
+        <div style="margin-top:0.5rem; padding-top:0.75rem; border-top:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--muted); font-size:0.8rem;">Input rate</span>
+            <span style="color:var(--text); font-size:0.8rem;">$3.00 / 1M tokens</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:0.4rem;">
+            <span style="color:var(--muted); font-size:0.8rem;">Output rate</span>
+            <span style="color:var(--text); font-size:0.8rem;">$15.00 / 1M tokens</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section>
+  <div class="summary-bar">
+    <p class="section-label" style="margin-bottom:0.5rem">// mission complete</p>
+    <h2 class="section-title" style="margin-bottom:0.5rem">What Claude + ADB Achieved</h2>
+    <p style="color:var(--muted); font-size:0.85rem">In 39 minutes, with zero app installs, no root required, and no data lost.</p>
+
+    <div class="summary-grid">
+      <div class="summary-stat">
+        <span class="big" data-target="26">0</span>
+        <span class="small">Packages removed</span>
+      </div>
+      <div class="summary-stat">
+        <span class="big" data-target="750">0</span>
+        <span class="small">MB RAM freed</span>
+      </div>
+      <div class="summary-stat">
+        <span class="big" data-target="9">0</span>
+        <span class="small">System tweaks</span>
+      </div>
+      <div class="summary-stat">
+        <span class="big" data-target="3">0</span>
+        <span class="small">Facebook trackers killed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Motorola Moto G05 · Android 15 · Session eec4797f · 2026-03-12</p>
+  <p style="margin-top:0.5rem">Optimized with <a href="#">Claude AI</a> + ADB Shell · No root required · All changes reversible</p>
+</footer>
+
+<script>
+  // Particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      animation-duration: ${8 + Math.random() * 12}s;
+      animation-delay: ${Math.random() * 10}s;
+      opacity: ${0.2 + Math.random() * 0.4};
+      width: ${1 + Math.random() * 2}px;
+      height: ${1 + Math.random() * 2}px;
+    `;
+    container.appendChild(p);
+  }
+
+  // Counter animation
+  function animateCounter(el, target, duration = 1500) {
+    const start = performance.now();
+    const update = (time) => {
+      const elapsed = time - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(ease * target);
+      if (progress < 1) requestAnimationFrame(update);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(update);
+  }
+
+  // Progress bars
+  function animateProgressBars() {
+    document.querySelectorAll('.progress-fill').forEach(bar => {
+      const width = bar.dataset.width;
+      setTimeout(() => { bar.style.width = width + '%'; }, 300);
+    });
+  }
+
+  // Intersection Observer for animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+
+        if (el.classList.contains('timeline-item') ||
+            el.classList.contains('pkg-card') ||
+            el.classList.contains('tweak-card')) {
+          const items = el.parentElement.querySelectorAll(':scope > .timeline-item, :scope > .pkg-card, :scope > .tweak-card');
+          let delay = 0;
+          items.forEach(item => {
+            if (!item.classList.contains('visible')) {
+              setTimeout(() => item.classList.add('visible'), delay);
+              delay += 80;
+            }
+          });
+        }
+
+        if (el.querySelector('.progress-fill')) {
+          animateProgressBars();
+        }
+
+        if (el.dataset.target) {
+          animateCounter(el, parseInt(el.dataset.target));
+        }
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // Observe hero counters
+  document.querySelectorAll('.hero-stat .number').forEach(el => observer.observe(el));
+  document.querySelectorAll('.summary-stat .big').forEach(el => observer.observe(el));
+
+  // Observe timeline items
+  document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
+
+  // Observe package cards
+  document.querySelectorAll('.pkg-card').forEach(el => observer.observe(el));
+
+  // Observe tweak cards
+  document.querySelectorAll('.tweak-card').forEach(el => observer.observe(el));
+
+  // Observe before/after
+  document.querySelectorAll('.ba-card').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

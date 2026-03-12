@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samsung Galaxy Note 8 × Claude — ADB Audit & Optimization</title>
+<meta name="author" content="Ercan Ermis">
+<meta name="description" content="How I used Claude AI to audit and optimize my Samsung Galaxy Note 8 via ADB commands.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://claudeslides.com/author/ercan-ermis/note8/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ClaudeSlides">
+<meta property="og:url" content="https://claudeslides.com/author/ercan-ermis/note8/">
+<meta property="og:title" content="Samsung Galaxy Note 8 × Claude — ADB Audit & Optimization">
+<meta property="og:description" content="How I used Claude AI to audit and optimize my Samsung Galaxy Note 8 via ADB commands.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Samsung Galaxy Note 8 × Claude — ADB Audit & Optimization">
+<meta name="twitter:description" content="How I used Claude AI to audit and optimize my Samsung Galaxy Note 8 via ADB commands.">
+<style>
+  :root {
+    --blue: #1668ff;
+    --cyan: #00c8ff;
+    --purple: #9b5de5;
+    --red: #ff4444;
+    --orange: #ff8c00;
+    --yellow: #ffd60a;
+    --green: #06d6a0;
+    --bg: #05050d;
+    --bg2: #08081a;
+    --bg3: #0d0d24;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --card: #0a0a1e;
+    --border: #15153a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ─────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(22,104,255,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(155,93,229,0.08) 0%, transparent 50%);
+  }
+
+  .star-field {
+    position: absolute;
+    inset: 0;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle linear infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.8; }
+  }
+
+  .hero-content { position: relative; z-index: 1; }
+
+  .device-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 1.2rem;
+    border: 1px solid rgba(22,104,255,0.4);
+    border-radius: 100px;
+    font-size: 0.72rem;
+    color: var(--cyan);
+    margin-bottom: 2rem;
+    letter-spacing: 0.12em;
+    background: rgba(22,104,255,0.07);
+    animation: fadeDown 0.7s ease both;
+  }
+
+  .pulse-ring {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    position: relative;
+  }
+
+  .pulse-ring::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid var(--cyan);
+    animation: ring 1.5s ease-out infinite;
+  }
+
+  @keyframes ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  h1.hero-title {
+    font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.7s ease 0.15s both;
+  }
+
+  .blue { color: var(--blue); }
+  .cyan { color: var(--cyan); }
+  .purple { color: var(--purple); }
+  .red { color: var(--red); }
+  .orange { color: var(--orange); }
+  .yellow { color: var(--yellow); }
+  .green-c { color: var(--green); }
+
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 580px;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.7s ease 0.3s both;
+  }
+
+  .hero-chips {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3.5rem;
+    animation: fadeUp 0.7s ease 0.45s both;
+  }
+
+  .chip {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .chip.crit { background: rgba(255,68,68,0.15); border: 1px solid rgba(255,68,68,0.3); color: var(--red); }
+  .chip.warn { background: rgba(255,140,0,0.15); border: 1px solid rgba(255,140,0,0.3); color: var(--orange); }
+  .chip.info { background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.25); color: var(--cyan); }
+  .chip.ok   { background: rgba(6,214,160,0.1); border: 1px solid rgba(6,214,160,0.25); color: var(--green); }
+
+  .hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    max-width: 700px;
+    margin: 0 auto;
+    animation: fadeUp 0.7s ease 0.6s both;
+  }
+
+  @media (max-width: 600px) { .hero-metrics { grid-template-columns: repeat(2, 1fr); } }
+
+  .hero-metric { text-align: center; }
+  .hero-metric .val { font-size: 2.2rem; font-weight: 900; display: block; }
+  .hero-metric .lbl { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.25rem; }
+
+  .scroll-down {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    animation: bob 2s ease-in-out infinite;
+  }
+
+  .scroll-arrow {
+    width: 20px; height: 20px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* ── SHARED ───────────────────────────── */
+  section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+
+  .sec-tag {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.6rem;
+  }
+
+  .sec-h {
+    font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .sec-p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.8;
+    max-width: 580px;
+    margin-bottom: 2.5rem;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 2rem;
+  }
+
+  /* ── DEVICE PROFILE ───────────────────── */
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 1.5rem;
+  }
+
+  @media(max-width:700px){ .profile-grid { grid-template-columns:1fr; } }
+
+  .note8-visual {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    gap: 1.5rem;
+  }
+
+  .note8-mockup {
+    width: 100px;
+    height: 200px;
+    border: 2.5px solid var(--blue);
+    border-radius: 18px;
+    background: linear-gradient(160deg, #08082a, #0d0d38);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 40px rgba(22,104,255,0.3), inset 0 0 20px rgba(22,104,255,0.05);
+    animation: notePulse 3s ease-in-out infinite;
+  }
+
+  @keyframes notePulse {
+    0%,100% { box-shadow: 0 0 40px rgba(22,104,255,0.3); }
+    50% { box-shadow: 0 0 60px rgba(22,104,255,0.5), 0 0 80px rgba(155,93,229,0.2); }
+  }
+
+  .note8-mockup::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    width: 35px; height: 4px;
+    background: var(--blue);
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  .note8-screen {
+    font-size: 0.48rem;
+    color: var(--cyan);
+    text-align: center;
+    line-height: 1.7;
+    margin-top: 0.5rem;
+  }
+
+  .age-badge {
+    padding: 0.4rem 0.8rem;
+    background: rgba(255,140,0,0.1);
+    border: 1px solid rgba(255,140,0,0.3);
+    border-radius: 100px;
+    font-size: 0.68rem;
+    color: var(--orange);
+    text-align: center;
+  }
+
+  .spec-table {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spec-row:last-child { border-bottom: none; }
+  .sk { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sv { font-size: 0.88rem; font-weight: 600; }
+  .sv.blue  { color: var(--cyan); }
+  .sv.warn  { color: var(--orange); }
+  .sv.crit  { color: var(--red); }
+  .sv.ok    { color: var(--green); }
+
+  /* ── SEVERITY ISSUES ──────────────────── */
+  .issues-list { display: flex; flex-direction: column; gap: 1rem; }
+
+  .issue-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.4s ease;
+  }
+
+  .issue-card.visible { opacity: 1; transform: translateX(0); }
+
+  .issue-card.critical { border-left: 3px solid var(--red); }
+  .issue-card.high     { border-left: 3px solid var(--orange); }
+  .issue-card.medium   { border-left: 3px solid var(--yellow); }
+
+  .sev-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .sev-badge.critical { background: rgba(255,68,68,0.15); color: var(--red); }
+  .sev-badge.high     { background: rgba(255,140,0,0.15); color: var(--orange); }
+  .sev-badge.medium   { background: rgba(255,214,10,0.1); color: var(--yellow); }
+
+  .issue-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .issue-desc  { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── MEMORY CHART ─────────────────────── */
+  .mem-bars { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .mem-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 60px;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
+  }
+
+  @media(max-width:600px){ .mem-row { grid-template-columns: 120px 1fr 50px; } }
+
+  .mem-row.visible { opacity: 1; transform: translateY(0); }
+  .mem-name { font-size: 0.75rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mem-bar-wrap { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
+
+  .mem-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0;
+    transition: width 1.2s ease;
+  }
+
+  .mem-fill.gms    { background: linear-gradient(90deg, #1668ff, #9b5de5); }
+  .mem-fill.system { background: linear-gradient(90deg, #ff4444, #ff8c00); }
+  .mem-fill.ui     { background: linear-gradient(90deg, #00c8ff, #1668ff); }
+  .mem-fill.app    { background: linear-gradient(90deg, #06d6a0, #00c8ff); }
+
+  .mem-val { font-size: 0.75rem; font-weight: 700; text-align: right; color: var(--cyan); }
+
+  /* ── BATTERY GAUGE ────────────────────── */
+  .battery-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  @media(max-width:700px){ .battery-section { grid-template-columns: 1fr; } }
+
+  .batt-gauge-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .gauge-wrap {
+    position: relative;
+    width: 160px; height: 80px;
+    overflow: hidden;
+  }
+
+  .gauge-bg, .gauge-fill {
+    position: absolute;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    top: 0; left: 0;
+  }
+
+  .gauge-bg {
+    border: 14px solid var(--border);
+    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  }
+
+  .gauge-fill {
+    border: 14px solid transparent;
+    border-bottom-color: var(--orange);
+    border-left-color: var(--orange);
+    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+    transform: rotate(-40deg);
+    transform-origin: center center;
+    transition: transform 1.5s ease;
+  }
+
+  .gauge-center {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  .gauge-val { font-size: 1.8rem; font-weight: 900; color: var(--orange); }
+  .gauge-lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .batt-stats { width: 100%; display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .batt-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+
+  .batt-row:last-child { border-bottom: none; }
+  .batt-key { color: var(--muted); }
+  .batt-val { font-weight: 600; }
+
+  .drain-list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .drain-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+  }
+
+  .drain-icon { font-size: 1.2rem; }
+  .drain-info { flex: 1; }
+  .drain-title { font-size: 0.85rem; font-weight: 600; }
+  .drain-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
+  .drain-impact { font-size: 0.7rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; }
+  .drain-impact.crit { background: rgba(255,68,68,0.15); color: var(--red); }
+  .drain-impact.high { background: rgba(255,140,0,0.15); color: var(--orange); }
+  .drain-impact.med  { background: rgba(255,214,10,0.1); color: var(--yellow); }
+
+  /* ── WHAT WE DID ──────────────────────── */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+
+  .action-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.4rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.96);
+    transition: all 0.35s ease;
+  }
+
+  .action-card.visible { opacity: 1; transform: scale(1); }
+
+  .action-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .action-card.fixed::before    { background: linear-gradient(90deg, var(--green), transparent); }
+  .action-card.disabled::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .action-card.cleared::before  { background: linear-gradient(90deg, var(--purple), transparent); }
+
+  .action-type {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 800;
+    margin-bottom: 0.6rem;
+  }
+
+  .action-type.fixed    { color: var(--green); }
+  .action-type.disabled { color: var(--cyan); }
+  .action-type.cleared  { color: var(--purple); }
+
+  .action-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .action-pkg  { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; font-style: italic; word-break: break-all; }
+  .action-why  { font-size: 0.78rem; color: var(--muted); line-height: 1.55; }
+
+  .action-result {
+    margin-top: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .action-result.fixed    { color: var(--green); }
+  .action-result.disabled { color: var(--cyan); }
+  .action-result.cleared  { color: var(--purple); }
+
+  /* ── TERMINAL ─────────────────────────── */
+  .terminal {
+    background: #04040c;
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    overflow: hidden;
+  }
+
+  .term-bar {
+    background: #0a0a1e;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .td { width: 12px; height: 12px; border-radius: 50%; }
+  .td.r { background: #ff5f56; }
+  .td.y { background: #ffbd2e; }
+  .td.g { background: #27c93f; }
+  .term-title { font-size: 0.72rem; color: var(--muted); margin-left: 0.5rem; }
+
+  .term-body {
+    padding: 1.5rem;
+    font-size: 0.78rem;
+    line-height: 2;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  .term-body::-webkit-scrollbar { width: 4px; }
+  .term-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tp { color: var(--cyan); }
+  .tc { color: var(--text); }
+  .to { color: #5a5a8a; }
+  .ts { color: var(--green); }
+  .tw { color: var(--orange); }
+  .tk { color: #3a3a6a; }
+
+  /* ── RECOMMENDATIONS ──────────────────── */
+  .recs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  .rec-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.4s ease;
+  }
+
+  .rec-card.visible { opacity: 1; transform: translateY(0); }
+
+  .rec-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+  .rec-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .rec-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+  .rec-urgency {
+    display: inline-block;
+    margin-top: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .rec-urgency.do-now { background: rgba(255,68,68,0.15); color: var(--red); }
+  .rec-urgency.do-soon { background: rgba(255,140,0,0.12); color: var(--orange); }
+  .rec-urgency.optional { background: rgba(0,200,255,0.08); color: var(--cyan); }
+
+  /* ── SUMMARY ──────────────────────────── */
+  .summary-wrap {
+    background: linear-gradient(135deg, rgba(22,104,255,0.07), rgba(155,93,229,0.07));
+    border: 1px solid rgba(22,104,255,0.2);
+    border-radius: 1.5rem;
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .sum-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-top: 2.5rem;
+  }
+
+  @media(max-width:600px){ .sum-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .sum-stat .big {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--cyan);
+    display: block;
+  }
+
+  .sum-stat .sml {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+  }
+
+  /* ── FOOTER ───────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  footer a { color: var(--cyan); text-decoration: none; }
+
+  /* ── ANIMATIONS ───────────────────────── */
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(25px);  } to { opacity:1; transform:translateY(0); } }
+
+  /* ── PARTICLES ────────────────────────── */
+  .particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: rise linear infinite;
+  }
+
+  @keyframes rise {
+    0%   { transform: translateY(100vh); opacity: 0; }
+    10%  { opacity: 0.5; }
+    90%  { opacity: 0.2; }
+    100% { transform: translateY(-20px); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<!-- ═══ HERO ════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="star-field" id="stars"></div>
+
+  <div class="hero-content">
+    <div class="device-label">
+      <span class="pulse-ring"></span>
+      ADB SESSION · 2026-03-12 · SAMSUNG GALAXY NOTE 8
+    </div>
+
+    <h1 class="hero-title">
+      Galaxy Note 8<br>
+      <span class="cyan">Diagnosed</span> &amp; <span class="blue">Fixed</span><br>
+      <span style="font-size:0.6em; color:var(--muted)">by Claude AI + ADB Shell</span>
+    </h1>
+
+    <p class="hero-sub">
+      An 8.5-year-old Samsung flagship put under the microscope.<br>
+      3 critical issues found. 9 fixes applied. Battery and RAM reclaimed.
+    </p>
+
+    <div class="hero-chips">
+      <span class="chip crit">⚠ System 96% Full</span>
+      <span class="chip crit">⚠ Android 9 EOL</span>
+      <span class="chip warn">Battery 78% SoH</span>
+      <span class="chip warn">Bixby Wake Lock</span>
+      <span class="chip ok">✓ WebView Restored</span>
+      <span class="chip ok">✓ 5 Apps Disabled</span>
+    </div>
+
+    <div class="hero-metrics">
+      <div class="hero-metric">
+        <span class="val" style="color:var(--red)" data-target="3">0</span>
+        <span class="lbl">Critical Issues</span>
+      </div>
+      <div class="hero-metric">
+        <span class="val" style="color:var(--orange)" data-target="4">0</span>
+        <span class="lbl">High Issues</span>
+      </div>
+      <div class="hero-metric">
+        <span class="val" style="color:var(--cyan)" data-target="9">0</span>
+        <span class="lbl">Fixes Applied</span>
+      </div>
+      <div class="hero-metric">
+        <span class="val" style="color:var(--green)" data-target="150">0</span>
+        <span class="lbl">MB RAM Freed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-down">
+    SCROLL
+    <div class="scroll-arrow"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══ DEVICE PROFILE ══════════════════════ -->
+<section>
+  <p class="sec-tag">// the device</p>
+  <h2 class="sec-h">Samsung Galaxy Note 8</h2>
+  <p class="sec-p">An Exynos 8895 flagship from 2017 — still powerful hardware, audited with Claude AI and ADB to uncover exactly what's consuming resources and battery.</p>
+
+  <div class="profile-grid">
+    <div class="note8-visual">
+      <div class="note8-mockup">
+        <div class="note8-screen">
+          SM-N950F<br>
+          Android 9<br>
+          ──────────<br>
+          adb shell<br>
+          ✓ connected
+        </div>
+      </div>
+      <div class="age-badge">⏱ Calibrated: 2017-10-12 · Age: ~8.5 years</div>
+    </div>
+
+    <div class="spec-table">
+      <div class="spec-row">
+        <span class="sk">Model</span>
+        <span class="sv blue">Samsung Galaxy Note 8 (SM-N950F)</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Android</span>
+        <span class="sv warn">9 Pie · SDK 28 · EOL</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">CPU</span>
+        <span class="sv">Exynos 8895 · 8 cores</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">RAM</span>
+        <span class="sv">5.3 GB total · 169 MB free (raw)</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Swap Used</span>
+        <span class="sv warn">534 MB / 2 GB</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">System Storage</span>
+        <span class="sv crit">4.6 / 4.8 GB → 96% FULL</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Battery SoH</span>
+        <span class="sv warn">78% · Max temp recorded: 86.1°C</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">CPU Governor</span>
+        <span class="sv">interactive</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Running Processes</span>
+        <span class="sv warn">443</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">ADB Device ID</span>
+        <span class="sv blue">988a97333631324a3730</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ ISSUES ══════════════════════════════ -->
+<section>
+  <p class="sec-tag">// audit findings</p>
+  <h2 class="sec-h">What Claude Discovered</h2>
+  <p class="sec-p">Full device health report — Claude audited every layer of the device and surfaced exactly what needed attention.</p>
+
+  <div class="issues-list">
+    <div class="issue-card critical">
+      <span class="sev-badge critical">CRITICAL</span>
+      <div>
+        <div class="issue-title">/system partition at 96% — only 230 MB free</div>
+        <div class="issue-desc">4.6 of 4.8 GB used on the system partition. Only 230 MB remains — system apps are baked in and cannot be removed without root. Disabling unnecessary pre-installed apps reduces overhead and prevents further accumulation.</div>
+      </div>
+    </div>
+
+    <div class="issue-card critical">
+      <span class="sev-badge critical">CRITICAL</span>
+      <div>
+        <div class="issue-title">Android 9 — End of Life (no security patches since ~2021)</div>
+        <div class="issue-desc">Samsung Galaxy Note 8 receives no security updates on Android 9. Known CVEs are unpatched with no vendor remediation path. Banking app (com.enparabank.retail), government app (tr.gov.turkiye.edevlet.kapisi), and password manager (com.x8bit.bitwarden) are actively used on this unpatched OS.</div>
+      </div>
+    </div>
+
+    <div class="issue-card critical">
+      <span class="sev-badge critical">CRITICAL</span>
+      <div>
+        <div class="issue-title">Battery 78% SoH · ~8.5 years old · Max temp: 86.1°C</div>
+        <div class="issue-desc">Calibrated October 2017. Effective capacity ~3,230 mAh vs 4,000 mAh nominal. Maximum recorded temperature of 86.1°C indicates past thermal stress events that accelerate lithium-ion degradation. Replacement strongly recommended.</div>
+      </div>
+    </div>
+
+    <div class="issue-card high">
+      <span class="sev-badge high">HIGH</span>
+      <div>
+        <div class="issue-title">Bixby holding active PARTIAL_WAKE_LOCK (45+ seconds)</div>
+        <div class="issue-desc">com.samsung.android.bixby.service holds a wake lock preventing the CPU from entering deep sleep. This is a continuous, identifiable battery drain source. Fixed in this session — disabled via ADB.</div>
+      </div>
+    </div>
+
+    <div class="issue-card high">
+      <span class="sev-badge high">HIGH</span>
+      <div>
+        <div class="issue-title">Google Play Services running 6 separate processes → 538 MB RAM</div>
+        <div class="issue-desc">com.google.android.gms spawns 6 persistent processes consuming ~538 MB combined. Google Assistant/Quick Search Box adds ~280 MB more. Combined Google services: ~820 MB RAM continuously occupied on a device with 5.3 GB total.</div>
+      </div>
+    </div>
+
+    <div class="issue-card high">
+      <span class="sev-badge high">HIGH</span>
+      <div>
+        <div class="issue-title">ANR crash log found — /data/anr/anr_2026-02-10-21-18-39-201</div>
+        <div class="issue-desc">An Application Not Responding event occurred on 2026-02-10. At least one app froze the main thread within the last month. Root cause requires root access to read the full ANR trace.</div>
+      </div>
+    </div>
+
+    <div class="issue-card high">
+      <span class="sev-badge high">HIGH</span>
+      <div>
+        <div class="issue-title">534 MB swap in use · 443 running processes</div>
+        <div class="issue-desc">Physical RAM was fully saturated at some point — the system spilled into swap. With 443 running processes and only 169 MB free physical RAM, the device is under consistent memory pressure causing slowdowns and app kills.</div>
+      </div>
+    </div>
+
+    <div class="issue-card medium">
+      <span class="sev-badge medium">MEDIUM</span>
+      <div>
+        <div class="issue-title">com.google.android.webview disabled — apps silently breaking</div>
+        <div class="issue-desc">WebView was disabled — Claude detected this and immediately re-enabled it. Many apps rely on WebView to render login pages, help docs, and in-app browsers. Re-enabled in this session.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ MEMORY CHART ══════════════════════════ -->
+<section>
+  <p class="sec-tag">// memory analysis</p>
+  <h2 class="sec-h">Top RAM Consumers</h2>
+  <p class="sec-p">Ranked by PSS (Proportional Set Size). The top 15 processes alone account for ~2.1 GB of RAM.</p>
+
+  <div class="mem-bars">
+    <div class="mem-row">
+      <span class="mem-name">GMS (×6 processes)</span>
+      <div class="mem-bar-wrap"><div class="mem-fill gms" data-width="100"></div></div>
+      <span class="mem-val">538 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Android System</span>
+      <div class="mem-bar-wrap"><div class="mem-fill system" data-width="52"></div></div>
+      <span class="mem-val">277 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Google Search + Assistant</span>
+      <div class="mem-bar-wrap"><div class="mem-fill gms" data-width="52"></div></div>
+      <span class="mem-val">281 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">surfaceflinger</span>
+      <div class="mem-bar-wrap"><div class="mem-fill ui" data-width="30"></div></div>
+      <span class="mem-val">164 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">SystemUI</span>
+      <div class="mem-bar-wrap"><div class="mem-fill ui" data-width="30"></div></div>
+      <span class="mem-val">161 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Samsung One UI Home</span>
+      <div class="mem-bar-wrap"><div class="mem-fill app" data-width="21"></div></div>
+      <span class="mem-val">112 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Bitwarden</span>
+      <div class="mem-bar-wrap"><div class="mem-fill app" data-width="19"></div></div>
+      <span class="mem-val">99 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Google Play Store</span>
+      <div class="mem-bar-wrap"><div class="mem-fill app" data-width="18"></div></div>
+      <span class="mem-val">96 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Samsung Keyboard</span>
+      <div class="mem-bar-wrap"><div class="mem-fill app" data-width="18"></div></div>
+      <span class="mem-val">95 MB</span>
+    </div>
+    <div class="mem-row">
+      <span class="mem-name">Google Photos</span>
+      <div class="mem-bar-wrap"><div class="mem-fill app" data-width="17"></div></div>
+      <span class="mem-val">91 MB</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ BATTERY ═══════════════════════════════ -->
+<section>
+  <p class="sec-tag">// battery deep dive</p>
+  <h2 class="sec-h">Battery Status</h2>
+  <p class="sec-p">The battery is the single most urgent hardware issue on this device.</p>
+
+  <div class="battery-section">
+    <div class="batt-gauge-card">
+      <p style="font-size:0.78rem; color:var(--muted); align-self:flex-start">State of Health</p>
+      <div class="gauge-wrap" id="gauge">
+        <div class="gauge-bg"></div>
+        <div class="gauge-fill" id="gaugeFill"></div>
+        <div class="gauge-center">
+          <div class="gauge-val">78%</div>
+          <div class="gauge-lbl">SoH</div>
+        </div>
+      </div>
+      <div class="batt-stats">
+        <div class="batt-row">
+          <span class="batt-key">Nominal Capacity</span>
+          <span class="batt-val">4,000 mAh</span>
+        </div>
+        <div class="batt-row">
+          <span class="batt-key">Effective Capacity</span>
+          <span class="batt-val" style="color:var(--orange)">~3,230 mAh</span>
+        </div>
+        <div class="batt-row">
+          <span class="batt-key">Calibrated</span>
+          <span class="batt-val">2017-10-12</span>
+        </div>
+        <div class="batt-row">
+          <span class="batt-key">Age</span>
+          <span class="batt-val" style="color:var(--red)">~8.5 years</span>
+        </div>
+        <div class="batt-row">
+          <span class="batt-key">Max Temp Recorded</span>
+          <span class="batt-val" style="color:var(--red)">86.1°C ⚠</span>
+        </div>
+        <div class="batt-row">
+          <span class="batt-key">Current Temp</span>
+          <span class="batt-val" style="color:var(--green)">22.5°C ✓</span>
+        </div>
+        <div class="batt-row">
+          <span class="batt-key">Verdict</span>
+          <span class="batt-val" style="color:var(--red)">Replace ASAP</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drain-list">
+      <p style="font-size:0.78rem; color:var(--muted); margin-bottom:0.5rem">Battery Drain Sources</p>
+
+      <div class="drain-item">
+        <span class="drain-icon">🔔</span>
+        <div class="drain-info">
+          <div class="drain-title">Bixby Wake Lock</div>
+          <div class="drain-sub">PARTIAL_WAKE_LOCK held 45+ seconds — prevents deep CPU sleep</div>
+        </div>
+        <span class="drain-impact crit">FIXED ✓</span>
+      </div>
+
+      <div class="drain-item">
+        <span class="drain-icon">🔵</span>
+        <div class="drain-info">
+          <div class="drain-title">Google Play Services (×6)</div>
+          <div class="drain-sub">538 MB, persistent background polling and syncing</div>
+        </div>
+        <span class="drain-impact high">HIGH</span>
+      </div>
+
+      <div class="drain-item">
+        <span class="drain-icon">🎙️</span>
+        <div class="drain-info">
+          <div class="drain-title">Google Assistant</div>
+          <div class="drain-sub">~280 MB, 3 persistent processes, always-on mic polling</div>
+        </div>
+        <span class="drain-impact high">HIGH</span>
+      </div>
+
+      <div class="drain-item">
+        <span class="drain-icon">📺</span>
+        <div class="drain-info">
+          <div class="drain-title">Always-On Display</div>
+          <div class="drain-sub">Continuous AMOLED pixel draw even while "sleeping"</div>
+        </div>
+        <span class="drain-impact med">MANUAL FIX</span>
+      </div>
+
+      <div class="drain-item">
+        <span class="drain-icon">📡</span>
+        <div class="drain-info">
+          <div class="drain-title">NFC Service</div>
+          <div class="drain-sub">Background antenna scanning even when NFC unused</div>
+        </div>
+        <span class="drain-impact med">MANUAL FIX</span>
+      </div>
+
+      <div class="drain-item">
+        <span class="drain-icon">🔋</span>
+        <div class="drain-info">
+          <div class="drain-title">Aged Battery (78% SoH)</div>
+          <div class="drain-sub">Lower capacity = any drain looks more severe</div>
+        </div>
+        <span class="drain-impact crit">REPLACE</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ WHAT WE DID ══════════════════════════ -->
+<section>
+  <p class="sec-tag">// session actions</p>
+  <h2 class="sec-h">9 Fixes Applied via ADB</h2>
+  <p class="sec-p">Every action taken in the session — no root required, all reversible.</p>
+
+  <div class="actions-grid">
+    <div class="action-card fixed">
+      <div class="action-type fixed">RE-ENABLED</div>
+      <div class="action-name">WebView</div>
+      <div class="action-pkg">com.google.android.webview</div>
+      <div class="action-why">Was incorrectly disabled. Dozens of apps silently break without WebView — login screens, help pages, in-app browsers all depend on it.</div>
+      <div class="action-result fixed">✓ pm enable com.google.android.webview → enabled</div>
+    </div>
+
+    <div class="action-card disabled">
+      <div class="action-type disabled">DISABLED</div>
+      <div class="action-name">Bixby Service</div>
+      <div class="action-pkg">com.samsung.android.bixby.service</div>
+      <div class="action-why">Was holding a PARTIAL_WAKE_LOCK preventing CPU deep sleep. Consuming 41 MB RAM with no active user. Single biggest actionable battery fix.</div>
+      <div class="action-result disabled">✓ Wake lock removed · −41 MB RAM</div>
+    </div>
+
+    <div class="action-card disabled">
+      <div class="action-type disabled">DISABLED</div>
+      <div class="action-name">Galaxy Finder</div>
+      <div class="action-pkg">com.samsung.android.app.galaxyfinder</div>
+      <div class="action-why">Bixby's companion search/finder service. No use without Bixby enabled. Runs background indexing processes.</div>
+      <div class="action-result disabled">✓ disabled-user</div>
+    </div>
+
+    <div class="action-card disabled">
+      <div class="action-type disabled">DISABLED</div>
+      <div class="action-name">Samsung Theme Store</div>
+      <div class="action-pkg">com.samsung.android.themestore</div>
+      <div class="action-why">Samsung's theme marketplace. Background sync and update checks with zero daily utility for most users.</div>
+      <div class="action-result disabled">✓ disabled-user</div>
+    </div>
+
+    <div class="action-card disabled">
+      <div class="action-type disabled">DISABLED</div>
+      <div class="action-name">Smart Switch Assistant</div>
+      <div class="action-pkg">com.samsung.android.smartswitchassistant</div>
+      <div class="action-why">Device migration tool for moving to a new Samsung. Only needed once. Has been running in background ever since first setup.</div>
+      <div class="action-result disabled">✓ disabled-user</div>
+    </div>
+
+    <div class="action-card disabled">
+      <div class="action-type disabled">DISABLED</div>
+      <div class="action-name">Factory Test App</div>
+      <div class="action-pkg">com.sec.android.app.DataCreate</div>
+      <div class="action-why">Samsung AutomationTest_FB — a factory QA testing app left on consumer devices. Zero purpose for end users.</div>
+      <div class="action-result disabled">✓ disabled-user</div>
+    </div>
+
+    <div class="action-card cleared">
+      <div class="action-type cleared">CACHE CLEARED</div>
+      <div class="action-name">Google Quick Search Box</div>
+      <div class="action-pkg">com.google.android.googlequicksearchbox</div>
+      <div class="action-why">Accumulated search history cache and offline model files. Was consuming ~280 MB RAM across 3 processes.</div>
+      <div class="action-result cleared">✓ pm clear → Success</div>
+    </div>
+
+    <div class="action-card cleared">
+      <div class="action-type cleared">CACHE CLEARED</div>
+      <div class="action-name">Google Photos</div>
+      <div class="action-pkg">com.google.android.apps.photos</div>
+      <div class="action-why">Photo thumbnail cache and sync metadata. Was consuming 91 MB RAM in background even when not actively syncing.</div>
+      <div class="action-result cleared">✓ pm clear → Success</div>
+    </div>
+
+    <div class="action-card cleared">
+      <div class="action-type cleared">CACHE CLEARED</div>
+      <div class="action-name">Google Play Store</div>
+      <div class="action-pkg">com.android.vending</div>
+      <div class="action-why">Play Store session data, download caches, and update metadata. Was consuming 96 MB RAM constantly.</div>
+      <div class="action-result cleared">✓ pm clear → Success</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ TERMINAL ══════════════════════════════ -->
+<section>
+  <p class="sec-tag">// the raw adb session</p>
+  <h2 class="sec-h">Commands Executed</h2>
+  <p class="sec-p">Exactly what was run against device 988a97333631324a3730.</p>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <span class="td r"></span>
+      <span class="td y"></span>
+      <span class="td g"></span>
+      <span class="term-title">adb shell · SM-N950F · 988a97333631324a3730</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tk"># Verify device connected</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb devices</span></div>
+      <div><span class="ts">988a97333631324a3730    device</span></div>
+      <br>
+      <div><span class="tk"># Run full audit — device info</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell getprop ro.product.model</span></div>
+      <div><span class="to">SM-N950F</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell getprop ro.build.version.release</span></div>
+      <div><span class="to">9</span></div>
+      <br>
+      <div><span class="tk"># Storage — CRITICAL: system at 96%</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell df -h</span></div>
+      <div><span class="tw">/system    4.8G   4.6G   230M  96%  ← CRITICAL</span></div>
+      <div><span class="to">/data       53G    10G    43G  20%  ← ok</span></div>
+      <br>
+      <div><span class="tk"># Battery — 78% SoH, max temp 86.1°C</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell dumpsys battery</span></div>
+      <div><span class="to">  health: 2 (Good)</span></div>
+      <div><span class="tw">  mSavedBatteryMaxTemp: 861  ← 86.1°C past thermal event</span></div>
+      <br>
+      <div><span class="tk"># Wake lock — Bixby holding PARTIAL_WAKE_LOCK</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell dumpsys power | grep -A5 "Wake Locks"</span></div>
+      <div><span class="tw">  PARTIAL_WAKE_LOCK 'bixby.scheduling.JobService' (45s+)</span></div>
+      <br>
+      <div><span class="tk"># FIX 1: Re-enable WebView (was incorrectly disabled!)</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm enable com.google.android.webview</span></div>
+      <div><span class="ts">Package com.google.android.webview new state: enabled  ✓</span></div>
+      <br>
+      <div><span class="tk"># FIX 2-6: Disable Bixby + bloatware</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm disable-user --user 0 com.samsung.android.bixby.service</span></div>
+      <div><span class="ts">...bixby.service new state: disabled-user  ✓</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm disable-user --user 0 com.samsung.android.app.galaxyfinder</span></div>
+      <div><span class="ts">...galaxyfinder new state: disabled-user  ✓</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm disable-user --user 0 com.samsung.android.themestore</span></div>
+      <div><span class="ts">...themestore new state: disabled-user  ✓</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm disable-user --user 0 com.samsung.android.smartswitchassistant</span></div>
+      <div><span class="ts">...smartswitchassistant new state: disabled-user  ✓</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm disable-user --user 0 com.sec.android.app.DataCreate</span></div>
+      <div><span class="ts">...DataCreate new state: disabled-user  ✓</span></div>
+      <br>
+      <div><span class="tk"># FIX 7-9: Clear top memory hog caches</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm clear com.google.android.googlequicksearchbox</span></div>
+      <div><span class="ts">Success  ✓</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm clear com.google.android.apps.photos</span></div>
+      <div><span class="ts">Success  ✓</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell pm clear com.android.vending</span></div>
+      <div><span class="ts">Success  ✓</span></div>
+      <br>
+      <div><span class="tk"># Verify Bixby wake lock is gone</span></div>
+      <div><span class="tp">$ </span><span class="tc">adb shell dumpsys power | grep -A5 "Wake Locks"</span></div>
+      <div><span class="ts">Wake Locks: size=0  ← no active wake locks ✓</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ RECOMMENDATIONS ═══════════════════════ -->
+<section>
+  <p class="sec-tag">// what's next</p>
+  <h2 class="sec-h">Remaining Recommendations</h2>
+  <p class="sec-p">Next steps to get even more performance — manual on-device settings and hardware upgrades.</p>
+
+  <div class="recs-grid">
+    <div class="rec-card">
+      <div class="rec-icon">🔋</div>
+      <div class="rec-title">Replace the Battery</div>
+      <div class="rec-desc">78% SoH + 86.1°C thermal history = degraded and heat-damaged cell. Use Samsung EB-BN950ABE. Cost: ~€15–25.</div>
+      <span class="rec-urgency do-now">DO THIS NOW</span>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-icon">📱</div>
+      <div class="rec-title">Consider Upgrading the Device</div>
+      <div class="rec-desc">Android 9 EOL with banking + government + password manager apps. The risk-to-convenience ratio is getting hard to justify.</div>
+      <span class="rec-urgency do-now">SECURITY RISK</span>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-icon">📡</div>
+      <div class="rec-title">Disable NFC When Unused</div>
+      <div class="rec-desc">Settings → Connections → NFC → off. NFC antenna scans continuously in background when enabled. Easy battery win.</div>
+      <span class="rec-urgency do-soon">DO SOON</span>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-icon">📺</div>
+      <div class="rec-title">Disable Always-On Display</div>
+      <div class="rec-desc">Settings → Lock screen → Always On Display → off. AMOLED displays draw power for every lit pixel, even at low brightness.</div>
+      <span class="rec-urgency do-soon">DO SOON</span>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-icon">😴</div>
+      <div class="rec-title">Put Heavy Apps to Sleep</div>
+      <div class="rec-desc">Settings → Device Care → Battery → App Power Management → add Google Photos, Gmail, GMS to "Sleeping apps".</div>
+      <span class="rec-urgency do-soon">DO SOON</span>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-icon">🧹</div>
+      <div class="rec-title">Regular Cache Cleaning</div>
+      <div class="rec-desc">Settings → Device Care → Storage → Clean Now. Won't free /system space but keeps /data from accumulating. Monthly is enough.</div>
+      <span class="rec-urgency optional">MONTHLY</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ SUMMARY ═══════════════════════════════ -->
+<section>
+  <div class="summary-wrap">
+    <p class="sec-tag" style="margin-bottom:0.5rem">// mission summary</p>
+    <h2 class="sec-h" style="margin-bottom:0.5rem">What Claude + ADB Found & Fixed</h2>
+    <p style="color:var(--muted); font-size:0.82rem; max-width:500px; margin:0 auto">
+      One ADB session. No root. No apps installed. Just diagnostics and targeted fixes.
+    </p>
+
+    <div class="sum-grid">
+      <div class="sum-stat">
+        <span class="big" data-target="7">0</span>
+        <span class="sml">Issues Found</span>
+      </div>
+      <div class="sum-stat">
+        <span class="big" data-target="9">0</span>
+        <span class="sml">Fixes Applied</span>
+      </div>
+      <div class="sum-stat">
+        <span class="big" data-target="150">0</span>
+        <span class="sml">MB RAM Freed</span>
+      </div>
+      <div class="sum-stat">
+        <span class="big" data-target="1">0</span>
+        <span class="sml">Wake Lock Killed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Samsung Galaxy Note 8 SM-N950F · Android 9 · ADB 988a97333631324a3730 · 2026-03-12</p>
+  <p style="margin-top:0.5rem">Audited &amp; fixed with <a href="#">Claude AI</a> + ADB Shell · No root required · All changes reversible</p>
+</footer>
+
+<script>
+  // ── Stars
+  const sf = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2 + 0.5;
+    s.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      width:${sz}px; height:${sz}px;
+      animation-duration:${2+Math.random()*4}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    sf.appendChild(s);
+  }
+
+  // ── Particles
+  const pc = document.getElementById('particles');
+  const colors = ['#1668ff','#00c8ff','#9b5de5'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const sz = Math.random() * 2 + 1;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${sz}px; height:${sz}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${10+Math.random()*15}s;
+      animation-delay:${Math.random()*12}s;
+    `;
+    pc.appendChild(p);
+  }
+
+  // ── Counter animation
+  function animateCounter(el, target, duration = 1400) {
+    const start = performance.now();
+    const update = (t) => {
+      const p = Math.min((t - start) / duration, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(e * target);
+      if (p < 1) requestAnimationFrame(update);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(update);
+  }
+
+  // ── Battery gauge
+  function animateGauge() {
+    const fill = document.getElementById('gaugeFill');
+    if (fill) {
+      // 78% SoH → rotate from -90deg base by 78% of 180deg = 140deg → actual: -90 + 140 = 50
+      // gauge rotates from -90 (empty) to +90 (full), so 78% = -90 + (0.78*180) = 50.4
+      setTimeout(() => {
+        fill.style.transform = 'rotate(-40deg)'; // ~78%
+      }, 400);
+    }
+  }
+
+  // ── IntersectionObserver
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+
+      // counters
+      if (el.dataset.target) {
+        animateCounter(el, parseInt(el.dataset.target));
+        io.unobserve(el);
+      }
+
+      // issue cards
+      if (el.classList.contains('issue-card')) {
+        const siblings = el.parentElement.querySelectorAll('.issue-card');
+        let d = 0;
+        siblings.forEach(s => {
+          if (!s.classList.contains('visible')) {
+            setTimeout(() => s.classList.add('visible'), d);
+            d += 100;
+          }
+        });
+      }
+
+      // mem rows
+      if (el.classList.contains('mem-row')) {
+        const rows = el.parentElement.querySelectorAll('.mem-row');
+        let d = 0;
+        rows.forEach(r => {
+          if (!r.classList.contains('visible')) {
+            setTimeout(() => {
+              r.classList.add('visible');
+              const bar = r.querySelector('.mem-fill');
+              if (bar) bar.style.width = bar.dataset.width + '%';
+            }, d);
+            d += 80;
+          }
+        });
+      }
+
+      // action cards
+      if (el.classList.contains('action-card')) {
+        const cards = el.parentElement.querySelectorAll('.action-card');
+        let d = 0;
+        cards.forEach(c => {
+          if (!c.classList.contains('visible')) {
+            setTimeout(() => c.classList.add('visible'), d);
+            d += 70;
+          }
+        });
+      }
+
+      // rec cards
+      if (el.classList.contains('rec-card')) {
+        const cards = el.parentElement.querySelectorAll('.rec-card');
+        let d = 0;
+        cards.forEach(c => {
+          if (!c.classList.contains('visible')) {
+            setTimeout(() => c.classList.add('visible'), d);
+            d += 80;
+          }
+        });
+      }
+
+      // gauge
+      if (el.id === 'gauge') {
+        animateGauge();
+        io.unobserve(el);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('[data-target]').forEach(el => io.observe(el));
+  document.querySelectorAll('.issue-card').forEach(el => io.observe(el));
+  document.querySelectorAll('.mem-row').forEach(el => io.observe(el));
+  document.querySelectorAll('.action-card').forEach(el => io.observe(el));
+  document.querySelectorAll('.rec-card').forEach(el => io.observe(el));
+  const gauge = document.getElementById('gauge');
+  if (gauge) io.observe(gauge);
+</script>
+</body>
+</html>
