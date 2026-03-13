@@ -1,857 +1,960 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="author" content="flightlesstux" />
-  <meta name="description" content="eeMail — a self-hosted Gmail-like email client built entirely with Claude Code, from architecture to dark mode fixes to virtual scrolling" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="flightlesstux">
+  <meta name="description" content="eeMail — a self-hosted Gmail-like email client built entirely with Claude Code. From zero to full-stack in days.">
   <title>eeMail × Claude — Built Together</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 
   <style>
-    /* ── Base ──────────────────────────────────────────────────────── */
+    /* ═══════════════════════════════════════════════
+       DESIGN SYSTEM
+    ═══════════════════════════════════════════════ */
     :root {
-      --claude-orange: #d97757;
-      --claude-cream:  #f5f0e8;
-      --eemail-blue:   #1a73e8;
-      --eemail-dark:   #0f172a;
-      --eemail-card:   #1e2937;
-      --accent:        #8ab4f8;
-      --green:         #34a853;
-      --yellow:        #f4b400;
-      --red:           #ea4335;
+      --bg:        #07070E;
+      --bg2:       #0D0D1A;
+      --bg3:       #12122A;
+      --orange:    #FF5E3A;
+      --cyan:      #00E5FF;
+      --purple:    #8B5CF6;
+      --gold:      #F59E0B;
+      --green:     #10B981;
+      --pink:      #EC4899;
+      --text:      #E2E8F0;
+      --muted:     #94A3B8;
+      --border:    rgba(139,92,246,.25);
+      --glass:     rgba(13,13,26,.7);
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
     }
 
-    .reveal-viewport { background: var(--eemail-dark); }
-
-    .reveal {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      color: #e8eaed;
-    }
-
-    .reveal h1, .reveal h2, .reveal h3 {
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      text-transform: none;
-      color: #fff;
-    }
-
-    .reveal section { padding: 0 !important; }
-
-    /* ── Slide layouts ─────────────────────────────────────────────── */
-    .slide {
-      display: flex !important;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 48px 64px !important;
-      box-sizing: border-box;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* ── Cover ─────────────────────────────────────────────────────── */
-    .slide-cover {
-      background: linear-gradient(135deg, #0a0f1e 0%, #0f172a 40%, #1a1f2e 100%);
-      text-align: center;
-    }
-
-    .slide-cover::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(26,115,232,0.25) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(217,119,87,0.15) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .logo-pair {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .logo-box {
-      width: 64px; height: 64px;
-      border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px; font-weight: 900;
-    }
-
-    .logo-eemail { background: var(--eemail-blue); color: #fff; }
-    .logo-claude { background: var(--claude-orange); color: #fff; font-size: 22px; }
-
-    .logo-x {
-      font-size: 28px; color: rgba(255,255,255,0.3); font-weight: 300;
-    }
-
-    .cover-title {
-      font-size: 3.4em !important;
-      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 16px !important;
-      line-height: 1.1 !important;
-    }
-
-    .cover-sub {
-      font-size: 1.15em;
-      color: rgba(255,255,255,0.55);
-      max-width: 560px;
-      line-height: 1.5;
-      margin: 0 auto 40px;
-    }
-
-    .wip-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(244,180,0,0.15);
-      border: 1px solid rgba(244,180,0,0.4);
-      color: var(--yellow);
-      padding: 8px 20px;
-      border-radius: 999px;
-      font-size: 0.8em;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .wip-dot {
-      width: 7px; height: 7px;
-      background: var(--yellow);
-      border-radius: 50%;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
-    }
-
-    /* ── Section header ────────────────────────────────────────────── */
-    .slide-section {
-      background: linear-gradient(135deg, #0f172a 0%, #1a1f2e 100%);
-      text-align: left;
-      align-items: flex-start;
-    }
-
-    .eyebrow {
-      font-size: 0.7em;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 16px;
-    }
-
-    .slide-title {
-      font-size: 2.4em !important;
-      margin-bottom: 0 !important;
-      line-height: 1.15 !important;
-    }
-
-    /* ── Cards grid ────────────────────────────────────────────────── */
-    .cards {
-      display: grid;
-      gap: 16px;
-      width: 100%;
-      margin-top: 32px;
-    }
-
-    .cards-2 { grid-template-columns: 1fr 1fr; }
-    .cards-3 { grid-template-columns: 1fr 1fr 1fr; }
-
-    .card {
-      background: var(--eemail-card);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px;
-      padding: 24px;
-    }
-
-    .card-icon { font-size: 1.8em; margin-bottom: 12px; }
-    .card-title { font-size: 0.95em; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .card-desc { font-size: 0.75em; color: rgba(255,255,255,0.5); line-height: 1.5; }
-
-    /* ── Timeline / chat style ─────────────────────────────────────── */
-    .chat {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      width: 100%;
-      max-width: 740px;
-      margin-top: 28px;
-    }
-
-    .chat-msg {
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .chat-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8em; font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .avatar-user { background: var(--eemail-blue); color: #fff; }
-    .avatar-claude { background: var(--claude-orange); color: #fff; }
-
-    .chat-bubble {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 0.8em;
-      line-height: 1.5;
-      max-width: 600px;
-    }
-
-    .bubble-user {
-      background: rgba(26,115,232,0.18);
-      border: 1px solid rgba(26,115,232,0.3);
-      color: #d2e3fc;
-    }
-
-    .bubble-claude {
-      background: rgba(217,119,87,0.12);
-      border: 1px solid rgba(217,119,87,0.25);
-      color: #f5d0c0;
-    }
-
-    .chat-name {
-      font-size: 0.68em;
-      font-weight: 600;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 4px;
-    }
-
-    /* ── Feature pills ─────────────────────────────────────────────── */
-    .pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 24px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 0.72em;
-      font-weight: 600;
-    }
-
-    .pill-blue  { background: rgba(26,115,232,0.2); color: var(--accent); border: 1px solid rgba(26,115,232,0.35); }
-    .pill-green { background: rgba(52,168,83,0.15); color: #81c995; border: 1px solid rgba(52,168,83,0.3); }
-    .pill-orange{ background: rgba(217,119,87,0.15); color: #f0b598; border: 1px solid rgba(217,119,87,0.3); }
-    .pill-gray  { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.12); }
-
-    /* ── Stat blocks ───────────────────────────────────────────────── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      width: 100%;
-      margin-top: 32px;
-    }
-
-    .stat {
-      background: var(--eemail-card);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px;
-      padding: 24px 20px;
-      text-align: center;
-    }
-
-    .stat-num {
-      font-size: 2.2em;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff 30%, var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .stat-label {
-      font-size: 0.7em;
-      color: rgba(255,255,255,0.45);
-      line-height: 1.3;
-    }
-
-    /* ── Code block ────────────────────────────────────────────────── */
-    .code-block {
-      background: #0d1117;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 20px 24px;
-      font-family: 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 0.72em;
-      color: #8b949e;
-      text-align: left;
-      width: 100%;
-      margin-top: 20px;
-      line-height: 1.7;
-    }
-
-    .code-block .kw  { color: #ff7b72; }
-    .code-block .fn  { color: #d2a8ff; }
-    .code-block .str { color: #a5d6ff; }
-    .code-block .cmt { color: #6e7681; font-style: italic; }
-    .code-block .num { color: #79c0ff; }
-
-    /* ── Timeline ──────────────────────────────────────────────────── */
-    .timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      width: 100%;
-      margin-top: 24px;
-    }
-
-    .tl-item {
-      display: flex;
-      gap: 20px;
-      align-items: stretch;
-      padding-bottom: 24px;
-    }
-
-    .tl-left {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .tl-dot {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--eemail-blue);
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-
-    .tl-dot-claude { background: var(--claude-orange); }
-    .tl-dot-green  { background: var(--green); }
-
-    .tl-line {
-      width: 2px;
-      flex: 1;
-      background: rgba(255,255,255,0.08);
-      margin-top: 6px;
-    }
-
-    .tl-content { flex: 1; }
-    .tl-label { font-size: 0.72em; font-weight: 700; color: #fff; margin-bottom: 4px; }
-    .tl-desc  { font-size: 0.68em; color: rgba(255,255,255,0.45); line-height: 1.4; }
-
-    /* ── CI gates ──────────────────────────────────────────────────── */
-    .gate-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-
-    .gate-check { color: var(--green); font-size: 1.1em; }
-    .gate-name  { font-size: 0.75em; font-weight: 600; color: #e8eaed; flex: 1; }
-    .gate-desc  { font-size: 0.65em; color: rgba(255,255,255,0.4); }
-
-    /* ── End slide ─────────────────────────────────────────────────── */
-    .slide-end {
-      background: linear-gradient(135deg, #0a0f1e 0%, #0f172a 100%);
-      text-align: center;
-    }
-
-    .slide-end::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 70% 50% at 50% 120%, rgba(217,119,87,0.2) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 20% -10%, rgba(26,115,232,0.15) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .gh-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 32px;
-      padding: 12px 28px;
-      background: var(--eemail-blue);
-      color: #fff;
-      border-radius: 999px;
-      font-size: 0.8em;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    /* ── Reveal overrides ──────────────────────────────────────────── */
+    /* ═══ BASE ═══ */
+    .reveal-viewport { background: var(--bg); }
+    .reveal { font-family: var(--font-head); color: var(--text); }
     .reveal .slides { text-align: left; }
-    .reveal .progress { color: var(--eemail-blue); }
-    .reveal .controls { color: var(--accent); }
-    .reveal p { margin: 0; }
+    .reveal .slides section { padding: 0 !important; height: 100vh; display: flex !important; flex-direction: column; justify-content: center; overflow: hidden; }
 
-    .full-w { width: 100%; }
-
-    /* ── Two-col layout ────────────────────────────────────────────── */
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      width: 100%;
-      margin-top: 24px;
+    /* ═══ CANVAS / BG PARTICLES ═══ */
+    #stars-canvas {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
     }
 
-    .col-label {
-      font-size: 0.68em;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
+    /* ═══ SLIDE WRAPPER ═══ */
+    .slide-inner {
+      position: relative; z-index: 2;
+      padding: 3.5rem 5rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+      height: 100%;
+      justify-content: center;
+    }
+    .slide-inner.center { align-items: center; text-align: center; }
+
+    /* ═══ ACCENT STRIPE (left bar) ═══ */
+    .accent-line {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: linear-gradient(180deg, var(--orange), var(--purple), var(--cyan));
     }
 
-    .col-label-blue   { color: var(--accent); }
-    .col-label-orange { color: var(--claude-orange); }
+    /* ═══ TYPOGRAPHY ═══ */
+    .reveal h1, .reveal h2, .reveal h3 { font-family: var(--font-head); margin: 0; line-height: 1.1; }
 
-    .check-list {
-      list-style: none;
-      padding: 0; margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    .t-hero { font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 700; }
+    .t-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; }
+    .t-sub   { font-size: clamp(1rem, 2vw, 1.5rem); font-weight: 400; color: var(--muted); }
+    .t-body  { font-size: clamp(.85rem, 1.5vw, 1.1rem); color: var(--text); line-height: 1.65; }
+    .t-tag   { font-size: .75rem; font-family: var(--font-code); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+    /* gradient text */
+    .grad-orange { background: linear-gradient(90deg, var(--orange), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-cyan   { background: linear-gradient(90deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-purple { background: linear-gradient(90deg, var(--purple), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-all    { background: linear-gradient(90deg, var(--orange), var(--purple), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ═══ GLASS CARD ═══ */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      backdrop-filter: blur(12px);
+    }
+    .card-orange { border-color: rgba(255,94,58,.4); box-shadow: 0 0 30px rgba(255,94,58,.08); }
+    .card-cyan   { border-color: rgba(0,229,255,.3); box-shadow: 0 0 30px rgba(0,229,255,.06); }
+    .card-purple { border-color: rgba(139,92,246,.4); box-shadow: 0 0 30px rgba(139,92,246,.08); }
+
+    /* ═══ GRID LAYOUTS ═══ */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+    /* ═══ TERMINAL WINDOW ═══ */
+    .terminal {
+      background: #0A0A14;
+      border: 1px solid rgba(139,92,246,.3);
+      border-radius: 10px;
+      overflow: hidden;
+      font-family: var(--font-code);
+      font-size: .8rem;
+    }
+    .terminal-bar {
+      background: #16163A;
+      padding: .5rem 1rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .terminal-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-bar .dot.r { background: #FF5F57; }
+    .terminal-bar .dot.y { background: #FEBC2E; }
+    .terminal-bar .dot.g { background: #28C840; }
+    .terminal-bar .title-t { color: var(--muted); font-size: .7rem; margin-left: auto; }
+    .terminal-body { padding: 1rem 1.25rem; line-height: 1.7; }
+    .terminal-body .prompt { color: var(--cyan); }
+    .terminal-body .cmd    { color: var(--text); }
+    .terminal-body .out    { color: var(--green); }
+    .terminal-body .err    { color: var(--orange); }
+    .terminal-body .cmt    { color: var(--muted); }
+
+    /* ═══ CHAT BUBBLES ═══ */
+    .chat-wrap { display: flex; flex-direction: column; gap: .9rem; }
+    .chat-msg { display: flex; align-items: flex-start; gap: .75rem; max-width: 85%; }
+    .chat-msg.me { align-self: flex-end; flex-direction: row-reverse; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 700;
+    }
+    .avatar.user { background: linear-gradient(135deg, var(--orange), var(--gold)); color: #fff; }
+    .avatar.ai   { background: linear-gradient(135deg, var(--purple), var(--cyan)); color: #fff; }
+    .bubble {
+      padding: .65rem 1rem; border-radius: 14px;
+      font-size: .82rem; line-height: 1.55; font-family: var(--font-head);
+    }
+    .bubble.user { background: rgba(255,94,58,.15); border: 1px solid rgba(255,94,58,.25); border-radius: 14px 4px 14px 14px; }
+    .bubble.ai   { background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.25); border-radius: 4px 14px 14px 14px; }
+
+    /* ═══ BADGE / CHIP ═══ */
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .25rem .7rem; border-radius: 999px;
+      font-size: .7rem; font-family: var(--font-code); font-weight: 500;
+      border: 1px solid;
+    }
+    .chip-orange { background: rgba(255,94,58,.12); border-color: rgba(255,94,58,.4); color: var(--orange); }
+    .chip-cyan   { background: rgba(0,229,255,.1);  border-color: rgba(0,229,255,.35); color: var(--cyan); }
+    .chip-purple { background: rgba(139,92,246,.12);border-color: rgba(139,92,246,.4); color: var(--purple); }
+    .chip-green  { background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.4); color: var(--green); }
+    .chip-gold   { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.4); color: var(--gold); }
+
+    /* ═══ STAT BOX ═══ */
+    .stat { display: flex; flex-direction: column; gap: .3rem; align-items: center; }
+    .stat-num { font-size: clamp(2rem,4vw,3.2rem); font-weight: 700; line-height: 1; }
+    .stat-label { font-size: .72rem; font-family: var(--font-code); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* ═══ TIMELINE ROW ═══ */
+    .tl-row { display: flex; align-items: center; gap: 1rem; padding: .6rem 0; }
+    .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .tl-line { flex: 1; height: 1px; background: var(--border); }
+
+    /* ═══ ICON STACK ═══ */
+    .icon-big { font-size: 2.5rem; line-height: 1; }
+
+    /* ═══ GLOW HEADINGS ═══ */
+    .glow-orange { text-shadow: 0 0 40px rgba(255,94,58,.5); }
+    .glow-cyan   { text-shadow: 0 0 40px rgba(0,229,255,.5); }
+    .glow-purple { text-shadow: 0 0 40px rgba(139,92,246,.5); }
+
+    /* ═══ PROGRESS BAR ═══ */
+    .pbar-wrap { display: flex; flex-direction: column; gap: .35rem; }
+    .pbar-label { display: flex; justify-content: space-between; font-size: .72rem; font-family: var(--font-code); color: var(--muted); }
+    .pbar { height: 4px; background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden; }
+    .pbar-fill { height: 100%; border-radius: 999px; }
+
+    /* ═══ COVER BG MESH ═══ */
+    .mesh-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(255,94,58,.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 20%, rgba(139,92,246,.14) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0,229,255,.05) 0%, transparent 70%);
     }
 
-    .check-list li {
-      font-size: 0.78em;
-      color: rgba(255,255,255,0.7);
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
+    /* ═══ SECTION BG TINTS ═══ */
+    .bg-orange-tint { background: radial-gradient(ellipse 70% 60% at 90% 50%, rgba(255,94,58,.07) 0%, transparent 70%); position:absolute; inset:0; z-index:0; pointer-events:none; }
+    .bg-cyan-tint   { background: radial-gradient(ellipse 70% 60% at 10% 50%, rgba(0,229,255,.07) 0%, transparent 70%); position:absolute; inset:0; z-index:0; pointer-events:none; }
+    .bg-purple-tint { background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(139,92,246,.08) 0%, transparent 70%); position:absolute; inset:0; z-index:0; pointer-events:none; }
+
+    /* ═══ DIVIDER ═══ */
+    hr.grad { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: .75rem 0; }
+
+    /* ═══ REVEAL OVERRIDES ═══ */
+    .reveal .progress { background: rgba(255,255,255,.05); }
+    .reveal .progress span { background: linear-gradient(90deg, var(--orange), var(--purple)); }
+    .reveal .controls button { color: var(--purple); }
+    .reveal .slide-number { color: var(--muted); font-family: var(--font-code); font-size: .65rem; }
+
+    /* ═══ BULLET ═══ */
+    ul.bullets { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6rem; }
+    ul.bullets li { display: flex; align-items: flex-start; gap: .75rem; font-size: clamp(.8rem,1.4vw,1rem); }
+    ul.bullets li::before { content: '▸'; color: var(--orange); flex-shrink: 0; margin-top: .05em; }
+
+    /* ═══ FOOTER LABEL ═══ */
+    .slide-footer {
+      position: absolute; bottom: 1.75rem; right: 3rem; z-index: 10;
+      display: flex; align-items: center; gap: .5rem;
+      font-family: var(--font-code); font-size: .62rem; color: rgba(148,163,184,.4);
+    }
+    .slide-footer span { color: var(--purple); opacity: .7; }
+
+    /* ═══ LOGO MARK ═══ */
+    .logomark {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--orange), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 700; color: #fff;
+      font-family: var(--font-code);
+      box-shadow: 0 0 40px rgba(139,92,246,.4);
+    }
+    .logomark-lg {
+      width: 96px; height: 96px; border-radius: 24px;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--purple) 60%, var(--cyan) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem; font-weight: 700; color: #fff;
+      font-family: var(--font-code);
+      box-shadow: 0 0 80px rgba(139,92,246,.5), 0 0 30px rgba(255,94,58,.3);
     }
 
-    .check-list li::before {
-      content: '✓';
-      color: var(--green);
-      font-weight: 700;
-      flex-shrink: 0;
+    /* ═══ HIGHLIGHT LINE ═══ */
+    .hl { display: inline; background: linear-gradient(120deg, rgba(255,94,58,.18) 0%, rgba(255,94,58,.05) 100%); padding: .05em .3em; border-radius: 4px; }
+    .hl-cyan { background: linear-gradient(120deg, rgba(0,229,255,.15) 0%, rgba(0,229,255,.04) 100%); }
+    .hl-purple { background: linear-gradient(120deg, rgba(139,92,246,.18) 0%, rgba(139,92,246,.05) 100%); }
+
+    /* ═══ WIP BADGE ═══ */
+    .wip-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .3rem .9rem; border-radius: 999px;
+      background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.4);
+      color: var(--gold); font-family: var(--font-code); font-size: .72rem; font-weight: 700;
     }
+    .wip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    /* ═══ ROADMAP ═══ */
+    .roadmap-item { display: flex; align-items: center; gap: 1rem; padding: .55rem 0; }
+    .roadmap-item .rnum { font-family: var(--font-code); font-size: .7rem; color: var(--muted); min-width: 1.5rem; }
+    .roadmap-item .rbar { flex:1; height: 3px; background: var(--border); border-radius:999px; overflow:hidden; }
+    .roadmap-item .rfill { height:100%; border-radius:999px; }
+
+    /* feature grid */
+    .feat-card { display:flex; flex-direction:column; gap:.5rem; }
+    .feat-icon { font-size: 1.6rem; }
+    .feat-title { font-size: .85rem; font-weight: 600; color: var(--text); }
+    .feat-desc  { font-size: .72rem; color: var(--muted); line-height: 1.5; }
+
+    /* ═══ SECURITY GRID ═══ */
+    .sec-job { display:flex; align-items:center; gap:.6rem; padding:.5rem .75rem; border-radius:8px; background:rgba(16,185,129,.06); border:1px solid rgba(16,185,129,.15); }
+    .sec-job .sj-dot { width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green); }
+    .sec-job .sj-name { font-family:var(--font-code);font-size:.72rem; color:var(--text); }
+
+    /* ═══ TRANSITIONS ═══ */
+    .reveal .slides > section { transition: none; }
   </style>
-
-<!-- auto-seo: injected by ClaudeSlides CI -->
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://claudeslides.com/author/flightlesstux/eemail/">
-<meta property="og:type" content="article">
-<meta property="og:site_name" content="ClaudeSlides">
-<meta property="og:url" content="https://claudeslides.com/author/flightlesstux/eemail/">
-<meta property="og:title" content="eeMail × Claude — Built Together">
-<meta property="og:description" content="eeMail — a self-hosted Gmail-like email client built entirely with Claude Code, from architecture to dark mode fixes to virtual scrolling">
-<meta property="og:image" content="https://claudeslides.com/author/flightlesstux/eemail/cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="eeMail × Claude — Built Together">
-<meta name="twitter:description" content="eeMail — a self-hosted Gmail-like email client built entirely with Claude Code, from architecture to dark mode fixes to virtual scrolling">
-<meta name="twitter:image" content="https://claudeslides.com/author/flightlesstux/eemail/cover.jpg">
 </head>
 <body>
+
+<canvas id="stars-canvas"></canvas>
+
 <div class="reveal">
-<div class="slides">
+  <div class="slides">
 
-  <!-- ── 1. COVER ─────────────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-cover">
-      <div class="logo-pair">
-        <div class="logo-box logo-eemail">ee</div>
-        <span class="logo-x">×</span>
-        <div class="logo-box logo-claude">✦</div>
-      </div>
-      <h1 class="cover-title">eeMail</h1>
-      <p class="cover-sub">
-        A self-hosted, privacy-first email client with a Gmail-grade UI —
-        designed by a human, built by Claude.
-      </p>
-      <div class="wip-badge">
-        <div class="wip-dot"></div>
-        Work in Progress · Coming Soon
-      </div>
-    </div>
-  </section>
+    <!-- ══════════════════════════════════════════
+         SLIDE 1 — COVER
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="mesh-bg"></div>
+      <div class="slide-inner center" style="gap:1.8rem;">
+        <div class="logomark-lg">@</div>
 
-  <!-- ── 2. THE PROBLEM ───────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">The Problem</p>
-      <h2 class="slide-title">Your email lives<br/>on someone else's server.</h2>
-      <div class="cards cards-3" style="margin-top:36px">
-        <div class="card">
-          <div class="card-icon">👁️</div>
-          <div class="card-title">Always watched</div>
-          <div class="card-desc">Gmail, Outlook and Yahoo scan your inbox for ads, metadata and analytics.</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🔒</div>
-          <div class="card-title">No real control</div>
-          <div class="card-desc">Accounts get suspended, rate-limited or deprecated with zero notice.</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🏠</div>
-          <div class="card-title">Self-hosting is painful</div>
-          <div class="card-desc">Roundcube and Rainloop exist but they feel like 2009 called and wants its UI back.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── 3. THE VISION ────────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">The Vision</p>
-      <h2 class="slide-title">Gmail UX.<br/>Your server. Your data.</h2>
-      <div class="two-col" style="margin-top:32px">
         <div>
-          <p class="col-label col-label-blue">eeMail is</p>
-          <ul class="check-list">
-            <li>A single <code>docker compose up</code> away</li>
-            <li>IMAP + SMTP — works with any provider</li>
-            <li>Gmail-grade UI with dark mode &amp; themes</li>
-            <li>Full-text search, thread view, attachments</li>
-            <li>Real-time inbox via IMAP IDLE + SSE</li>
-            <li>GPG-encrypted credentials at rest</li>
-          </ul>
+          <p class="t-tag" style="margin-bottom:.5rem;">a flightlesstux project × claude code</p>
+          <h1 class="t-hero">
+            <span class="grad-orange">ee</span><span style="color:var(--text)">Mail</span>
+          </h1>
+          <p class="t-sub" style="margin-top:.4rem;">Self-hosted. Gmail-inspired. Built entirely with Claude.</p>
         </div>
+
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap; justify-content:center;">
+          <span class="chip chip-orange">⚡ IMAP / SMTP</span>
+          <span class="chip chip-purple">🔒 GPG Encrypted</span>
+          <span class="chip chip-cyan">🐳 Docker Compose</span>
+          <span class="chip chip-gold">⚠ WIP — coming soon</span>
+        </div>
+
+        <div class="wip-badge" style="margin-top:.5rem;">
+          <span class="wip-dot"></span>
+          Work in progress · release coming soon
+        </div>
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 2 — THE PROBLEM
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-orange-tint"></div>
+      <div class="accent-line"></div>
+      <div class="slide-inner" style="gap:2rem;">
         <div>
-          <p class="col-label col-label-orange">eeMail is not</p>
-          <ul class="check-list" style="--green: #ea4335;">
-            <li style="--green:#ea4335">Another webmail that downloads your entire inbox</li>
-            <li style="--green:#ea4335">A mail server — just a beautiful client</li>
-            <li style="--green:#ea4335">Dependent on any cloud service</li>
-            <li style="--green:#ea4335">Finished — but almost there 🚀</li>
-          </ul>
+          <p class="t-tag">the problem</p>
+          <h2 class="t-title grad-orange glow-orange">Email clients are<br>a privacy nightmare.</h2>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ── 4. STACK ──────────────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">The Stack</p>
-      <h2 class="slide-title">Modern, minimal, fast.</h2>
-      <div class="cards cards-3" style="margin-top:32px">
-        <div class="card">
-          <div class="card-icon">⚡</div>
-          <div class="card-title">Frontend</div>
-          <div class="card-desc">Next.js 15 · Tailwind CSS · React Server Components · @tanstack/react-virtual</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🖥️</div>
-          <div class="card-title">Backend</div>
-          <div class="card-desc">Node.js · Express · SQLite (better-sqlite3 + FTS5) · imapflow · nodemailer</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🐳</div>
-          <div class="card-title">Infrastructure</div>
-          <div class="card-desc">Docker Compose · Valkey (Redis fork) · OpenPGP.js · 7 parallel CI security gates</div>
-        </div>
-      </div>
-      <div class="pills" style="margin-top:20px">
-        <span class="pill pill-blue">TypeScript strict</span>
-        <span class="pill pill-green">80% test coverage</span>
-        <span class="pill pill-orange">GPG at-rest encryption</span>
-        <span class="pill pill-gray">No cloud dependency</span>
-        <span class="pill pill-gray">IMAP IDLE real-time push</span>
-      </div>
-    </div>
-  </section>
+        <div class="grid-2" style="gap:1.25rem; align-items:start;">
+          <div class="card card-orange" style="display:flex;flex-direction:column;gap:.9rem;">
+            <ul class="bullets">
+              <li>Gmail scans your inbox to serve ads</li>
+              <li>Outlook uploads contacts without asking</li>
+              <li>Cloud clients breach confidentiality</li>
+              <li>Fat Electron apps slow your machine</li>
+            </ul>
+          </div>
 
-  <!-- ── 5. ENTER CLAUDE ───────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">Enter Claude</p>
-      <h2 class="slide-title">Not just autocomplete.<br/>A co-founder.</h2>
-      <div class="chat">
-        <div class="chat-msg">
-          <div class="chat-avatar avatar-user">me</div>
-          <div>
-            <div class="chat-name">flightlesstux</div>
-            <div class="chat-bubble bubble-user">
-              I want to build a self-hosted email client that feels like Gmail but runs on Docker. Full IMAP sync, dark mode, GPG encryption, real-time push. Can we do this?
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="card" style="text-align:center;padding:1.75rem 1.5rem;">
+              <p class="stat-num grad-orange">100%</p>
+              <p class="stat-label">data stays on your machine</p>
             </div>
-          </div>
-        </div>
-        <div class="chat-msg">
-          <div class="chat-avatar avatar-claude">✦</div>
-          <div>
-            <div class="chat-name">Claude</div>
-            <div class="chat-bubble bubble-claude">
-              Yes — and here's the architecture: metadata-only sync (envelope + headers, body on-demand), Valkey pub/sub for IMAP IDLE → SSE to browser, SQLite FTS5 for instant search, GPG keypair auto-generated on first run…
-            </div>
-          </div>
-        </div>
-        <div class="chat-msg">
-          <div class="chat-avatar avatar-user">me</div>
-          <div>
-            <div class="chat-name">flightlesstux</div>
-            <div class="chat-bubble bubble-user">
-              do it all
+            <div class="card" style="font-size:.85rem;color:var(--muted);line-height:1.6;">
+              The solution: run your own email client. Access any IMAP/SMTP account. Beautiful UI. Everything local.
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
 
-  <!-- ── 6. WHAT CLAUDE BUILT ─────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">What We Built Together</p>
-      <h2 class="slide-title">From zero to production-grade<br/>in weeks, not months.</h2>
-      <div class="cards cards-2" style="margin-top:28px">
-        <div class="card">
-          <div class="card-icon">🏗️</div>
-          <div class="card-title">Full Architecture Design</div>
-          <div class="card-desc">Claude designed the entire system: IMAP connection pool (p-queue, max 2 connections), UIDNEXT incremental sync, Valkey cache invalidation strategy, SQLite WAL mode.</div>
+    <!-- ══════════════════════════════════════════
+         SLIDE 3 — THE VISION
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-cyan-tint"></div>
+      <div class="accent-line" style="background:linear-gradient(180deg,var(--cyan),var(--green),var(--purple));"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div>
+          <p class="t-tag">vision</p>
+          <h2 class="t-title grad-cyan">Gmail experience.<br>Your server. Your rules.</h2>
         </div>
-        <div class="card">
-          <div class="card-icon">🔐</div>
-          <div class="card-title">Security Model</div>
-          <div class="card-desc">GPG keypair on first run, bcrypt sessions, TOTP + YubiKey + Duo MFA, 7 parallel CI gates (Semgrep, CodeQL, Trivy, gitleaks, njsscan, OWASP ZAP).</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🎨</div>
-          <div class="card-title">Gmail-Grade UI</div>
-          <div class="card-desc">Sidebar with unread counts, thread view, compose with Tiptap, reading pane (right/bottom/off), dark mode, 8 color swatches, 3 density modes, keyboard shortcuts.</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🧪</div>
-          <div class="card-title">Full Test Suite</div>
-          <div class="card-desc">Unit, integration, smoke, contract, negative tests. TDD flow: failing test first, then implement. 80% line coverage enforced in CI.</div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ── 7. DEBUGGING DARK MODE ────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">Real Story — Debugging Together</p>
-      <h2 class="slide-title">"Themes are still not working.<br/>Colors not changing at all."</h2>
-      <div class="chat" style="margin-top:20px">
-        <div class="chat-msg">
-          <div class="chat-avatar avatar-user">me</div>
-          <div>
-            <div class="chat-name">flightlesstux</div>
-            <div class="chat-bubble bubble-user">themes are still not working. the colors are not changing even white or dark mode.</div>
+        <div class="grid-3">
+          <div class="card card-cyan feat-card">
+            <span class="feat-icon">📬</span>
+            <div class="feat-title">Multi-account</div>
+            <div class="feat-desc">Gmail, Fastmail, your own SMTP — unified inbox, one UI.</div>
+          </div>
+          <div class="card feat-card" style="border-color:rgba(245,158,11,.3);">
+            <span class="feat-icon">🔒</span>
+            <div class="feat-title">GPG encrypted</div>
+            <div class="feat-desc">Credentials never stored in plaintext. Auto-generated GPG keypair on first run.</div>
+          </div>
+          <div class="card card-purple feat-card">
+            <span class="feat-icon">⚡</span>
+            <div class="feat-title">Real-time push</div>
+            <div class="feat-desc">IMAP IDLE → Valkey pub/sub → SSE → browser. Zero polling.</div>
+          </div>
+          <div class="card feat-card" style="border-color:rgba(16,185,129,.3);">
+            <span class="feat-icon">🔍</span>
+            <div class="feat-title">Local FTS5 search</div>
+            <div class="feat-desc">SQLite FTS5 indexes subject, from, to, body. Instant local search.</div>
+          </div>
+          <div class="card feat-card" style="border-color:rgba(236,72,153,.3);">
+            <span class="feat-icon">🧵</span>
+            <div class="feat-title">Thread view</div>
+            <div class="feat-desc">Collapse / expand conversation threads, just like Gmail.</div>
+          </div>
+          <div class="card feat-card" style="border-color:rgba(255,94,58,.3);">
+            <span class="feat-icon">🎹</span>
+            <div class="feat-title">Keyboard shortcuts</div>
+            <div class="feat-desc">Full Gmail-compatible keyboard navigation. Power users welcome.</div>
           </div>
         </div>
-        <div class="chat-msg">
-          <div class="chat-avatar avatar-claude">✦</div>
-          <div>
-            <div class="chat-name">Claude — root cause found in 3 mins</div>
-            <div class="chat-bubble bubble-claude">
-              Found 3 bugs: (1) <code>applyThemeSwatch</code> was adding <code>.dark</code> class AFTER <code>applyTheme</code> removed it. (2) Light swatches never removed <code>.dark</code>. (3) The layout.tsx blocking script had a redundant dark-class injection from the swatch section. Fixed all three — light/dark/system now work correctly.
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 4 — THE STACK
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-purple-tint"></div>
+      <div class="accent-line" style="background:linear-gradient(180deg,var(--purple),var(--cyan));"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div>
+          <p class="t-tag">stack</p>
+          <h2 class="t-title grad-purple">Everything chosen<br>for a reason.</h2>
+        </div>
+
+        <div class="grid-2" style="gap:1.25rem;">
+          <div style="display:flex;flex-direction:column;gap:.75rem;">
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">Next.js 14</span>
+              <span class="chip chip-orange">Frontend</span>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">Node.js / Express</span>
+              <span class="chip chip-cyan">Backend</span>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">SQLite + FTS5</span>
+              <span class="chip chip-purple">Database</span>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">Valkey (Redis fork)</span>
+              <span class="chip chip-green">Cache</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.75rem;">
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">imapflow</span>
+              <span class="chip chip-gold">IMAP client</span>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">nodemailer</span>
+              <span class="chip chip-orange">SMTP</span>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">OpenPGP.js</span>
+              <span class="chip chip-purple">Crypto</span>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;">
+              <span style="font-size:.85rem;font-weight:600;">Tiptap editor</span>
+              <span class="chip chip-cyan">Compose</span>
+            </div>
+          </div>
+        </div>
+        <p class="t-tag" style="text-align:center;">one command to run it all → <code style="color:var(--cyan);font-family:var(--font-code);">docker compose up -d</code></p>
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 5 — ENTER CLAUDE
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="mesh-bg" style="background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(139,92,246,.1) 0%, transparent 70%);"></div>
+      <div class="slide-inner" style="gap:1.5rem;">
+        <div style="text-align:center;">
+          <p class="t-tag" style="text-align:center;">enter claude</p>
+          <h2 class="t-title grad-purple glow-purple">The conversation<br>that built eeMail.</h2>
+        </div>
+
+        <div class="chat-wrap" style="max-width:680px;margin:0 auto;width:100%;">
+          <div class="chat-msg me">
+            <div class="avatar user">E</div>
+            <div class="bubble user">
+              I want to build a self-hosted Gmail clone. IMAP/SMTP, GPG encryption, local SQLite, Docker. Real-time push via SSE. Let's go.
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="avatar ai">C</div>
+            <div class="bubble ai">
+              Love it. Let's start with the schema — <code style="color:var(--cyan);font-family:var(--font-code);">accounts</code>, <code style="color:var(--cyan);font-family:var(--font-code);">emails</code>, <code style="color:var(--cyan);font-family:var(--font-code);">folders</code>, <code style="color:var(--cyan);font-family:var(--font-code);">labels</code>, FTS5 virtual table for instant search…
+            </div>
+          </div>
+          <div class="chat-msg me">
+            <div class="avatar user">E</div>
+            <div class="bubble user">
+              Add multi-layer auth: TOTP, YubiKey FIDO2, and Duo MFA. All stackable.
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="avatar ai">C</div>
+            <div class="bubble ai">
+              Done. <code style="color:var(--cyan);font-family:var(--font-code);">otplib</code> + <code style="color:var(--cyan);font-family:var(--font-code);">@simplewebauthn/server</code> + Duo Web SDK v4. Each layer optional, all stackable, session cookies <code style="color:var(--cyan);font-family:var(--font-code);">HTTPOnly + Strict</code>.
+            </div>
+          </div>
+          <div class="chat-msg me">
+            <div class="avatar user">E</div>
+            <div class="bubble user">Think what we can add more and how we can improve?</div>
+          </div>
+          <div class="chat-msg">
+            <div class="avatar ai">C</div>
+            <div class="bubble ai">
+              Virtual scrolling, thread view, attachment parsing, OAuth2 sign-in, on-demand body fetch — all in one PR. Shall I?
+            </div>
+          </div>
+          <div class="chat-msg me">
+            <div class="avatar user">E</div>
+            <div class="bubble user" style="font-weight:700;">do it all</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 6 — WHAT WE BUILT
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-orange-tint"></div>
+      <div class="accent-line"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div>
+          <p class="t-tag">what we built</p>
+          <h2 class="t-title"><span class="grad-orange">5 features.</span> <span style="color:var(--muted);font-weight:400;">One PR.</span></h2>
+        </div>
+
+        <div class="grid-2" style="gap:1.25rem;">
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="card card-orange" style="display:flex;gap:1rem;align-items:flex-start;">
+              <span style="font-size:1.5rem;">📜</span>
+              <div>
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.3rem;">Virtual scrolling</div>
+                <div style="font-size:.75rem;color:var(--muted);">@tanstack/react-virtual — renders only visible rows. Thousands of emails, zero jank.</div>
+              </div>
+            </div>
+            <div class="card" style="display:flex;gap:1rem;align-items:flex-start;border-color:rgba(236,72,153,.3);">
+              <span style="font-size:1.5rem;">🧵</span>
+              <div>
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.3rem;">Thread view</div>
+                <div style="font-size:.75rem;color:var(--muted);">Expand / collapse conversation threads. Route ordering bug caught & fixed by Claude.</div>
+              </div>
+            </div>
+            <div class="card card-cyan" style="display:flex;gap:1rem;align-items:flex-start;">
+              <span style="font-size:1.5rem;">📎</span>
+              <div>
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.3rem;">Attachment parsing</div>
+                <div style="font-size:.75rem;color:var(--muted);">simpleParser on body fetch → chips in reader. Stored in SQLite, served on demand.</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="card card-purple" style="display:flex;gap:1rem;align-items:flex-start;">
+              <span style="font-size:1.5rem;">⚡</span>
+              <div>
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.3rem;">Real-time SSE push</div>
+                <div style="font-size:.75rem;color:var(--muted);">IMAP IDLE → Valkey pub/sub → SSE → React hook. New mail without any polling.</div>
+              </div>
+            </div>
+            <div class="card" style="display:flex;gap:1rem;align-items:flex-start;border-color:rgba(245,158,11,.3);">
+              <span style="font-size:1.5rem;">🔑</span>
+              <div>
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.3rem;">OAuth2 sign-in</div>
+                <div style="font-size:.75rem;color:var(--muted);">PKCE flow for Gmail/Outlook. Token refresh handled silently. No password needed.</div>
+              </div>
+            </div>
+            <div class="terminal" style="font-size:.7rem;">
+              <div class="terminal-bar">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="title-t">git log --oneline</span>
+              </div>
+              <div class="terminal-body">
+                <div><span class="out">feat:</span> <span class="cmd">virtual scroll + thread view + attachments</span></div>
+                <div><span class="out">feat:</span> <span class="cmd">SSE real-time push via Valkey pub/sub</span></div>
+                <div><span class="out">feat:</span> <span class="cmd">OAuth2 PKCE for Gmail & Outlook</span></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="pills" style="margin-top:20px">
-        <span class="pill pill-green">PR #15 merged</span>
-        <span class="pill pill-gray">2 files changed, 11 insertions, 8 deletions</span>
-        <span class="pill pill-green">All 3 CI gates ✓</span>
-      </div>
-    </div>
-  </section>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
 
-  <!-- ── 8. SERVER-SIDE EMAILS ────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">Key Architecture Decision</p>
-      <h2 class="slide-title">"Keep emails on the server.<br/>Never download fully."</h2>
-      <div class="code-block">
-        <span class="cmt">// OLD: download everything on sync</span><br/>
-        <span class="kw">for await</span> (<span class="kw">const</span> msg <span class="kw">of</span> client.fetch(range, { source: <span class="kw">true</span> })) {<br/>
-        &nbsp;&nbsp;<span class="cmt">// 10MB email? Downloaded. Every time. Painful.</span><br/>
-        }<br/><br/>
-        <span class="cmt">// NEW: metadata only during sync (Claude's idea)</span><br/>
-        <span class="kw">for await</span> (<span class="kw">const</span> msg <span class="kw">of</span> client.fetch(range, {<br/>
-        &nbsp;&nbsp;uid: <span class="kw">true</span>, flags: <span class="kw">true</span>, envelope: <span class="kw">true</span>,<br/>
-        &nbsp;&nbsp;headers: <span class="kw">true</span>, bodyStructure: <span class="kw">true</span>, size: <span class="kw">true</span><br/>
-        })) { <span class="cmt">// body fetched on-demand when user opens email ✓</span> }
-      </div>
-      <div class="pills" style="margin-top:16px">
-        <span class="pill pill-blue">Headers only sync</span>
-        <span class="pill pill-green">Body fetched on open</span>
-        <span class="pill pill-orange">Valkey 300s body cache</span>
-        <span class="pill pill-gray">Attachments parsed + stored once</span>
-      </div>
-    </div>
-  </section>
+    <!-- ══════════════════════════════════════════
+         SLIDE 7 — SERVER-SIDE EMAILS
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-cyan-tint"></div>
+      <div class="accent-line" style="background:linear-gradient(180deg,var(--cyan),var(--purple));"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div>
+          <p class="t-tag">architecture decision</p>
+          <h2 class="t-title grad-cyan">Emails live on<br>the server. Always.</h2>
+        </div>
 
-  <!-- ── 9. FEATURES SPRINT ────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">One Session · Five Features</p>
-      <h2 class="slide-title">"do it all" →<br/>shipped in one PR.</h2>
-      <div class="timeline" style="margin-top:28px">
-        <div class="tl-item">
-          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-label">📎 Attachment Display</div>
-            <div class="tl-desc">New <code>GET /emails/:id/attachments</code> route. Parsed via simpleParser on first open. Chips with filename, size, download link below body.</div>
+        <div class="grid-2" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="card card-cyan">
+              <p style="font-size:.8rem;font-weight:600;color:var(--cyan);margin-bottom:.75rem;">▸ Sync Strategy</p>
+              <ul class="bullets" style="font-size:.8rem;">
+                <li>Fetch only envelope + headers + bodyStructure on sync</li>
+                <li>Full body fetched on-demand when user opens email</li>
+                <li>Cached in Valkey 5 min (<code style="font-family:var(--font-code);color:var(--cyan);">emailbody:{id}</code>)</li>
+                <li>IMAP IDLE — no polling, zero wasted connections</li>
+                <li>UIDNEXT + HIGHESTMODSEQ tracked per folder</li>
+              </ul>
+            </div>
+            <div class="card" style="border-color:rgba(245,158,11,.3);font-size:.8rem;color:var(--muted);line-height:1.6;">
+              <span style="color:var(--gold);">⚡</span> IMAP connection pool capped at 2 per account — 1 for IDLE, 1 for commands. Protects against rate-bans from Gmail/Outlook.
+            </div>
           </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left"><div class="tl-dot tl-dot-claude"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-label">🧵 Thread View</div>
-            <div class="tl-desc"><code>GET /emails/thread/:threadId</code> placed BEFORE <code>/:id</code> to avoid route conflict. Expandable thread messages in reader.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left"><div class="tl-dot tl-dot-green"></div><div class="tl-line"></div></div>
-          <div class="tl-content">
-            <div class="tl-label">⚡ Virtual Scrolling</div>
-            <div class="tl-desc">@tanstack/react-virtual — only visible rows mounted. Row height matches density setting (compact 40px / comfortable 52px / spacious 64px).</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line" style="background:transparent"></div></div>
-          <div class="tl-content">
-            <div class="tl-label">✅ All 3 CI gates green · PR #16 merged</div>
-            <div class="tl-desc">CI · API Quality · Security — all passing. One squash commit on develop.</div>
+
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="title-t">sync flow</span>
+            </div>
+            <div class="terminal-body" style="font-size:.72rem;">
+              <div class="cmt"># IMAP IDLE (always-on)</div>
+              <div><span class="prompt">IMAP</span> <span class="cmd">→ EXISTS response</span></div>
+              <div><span class="prompt">sync</span> <span class="cmd">→ fetch UID envelope</span></div>
+              <div><span class="prompt">SQLite</span> <span class="cmd">→ insert email row</span></div>
+              <div><span class="prompt">Valkey</span> <span class="cmd">→ PUBLISH mail:new</span></div>
+              <div><span class="prompt">SSE</span> <span class="cmd">→ push to browser</span></div>
+              <div style="margin-top:.5rem;" class="cmt"># User opens email</div>
+              <div><span class="prompt">GET</span> <span class="cmd">/api/v1/emails/:id</span></div>
+              <div><span class="prompt">cache?</span> <span class="out">HIT → return immediately</span></div>
+              <div><span class="prompt">cache?</span> <span class="err">MISS → IMAP BODY fetch</span></div>
+              <div><span class="prompt">Valkey</span> <span class="cmd">→ SET emailbody:{id} 300s</span></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
 
-  <!-- ── 10. CI / SECURITY ─────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">Security First</p>
-      <h2 class="slide-title">7 CI gates.<br/>Every single PR.</h2>
-      <div style="margin-top:24px; width:100%">
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">Semgrep SAST</span><span class="gate-desc">OWASP Top 10 static analysis</span></div>
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">CodeQL</span><span class="gate-desc">GitHub's semantic code analysis</span></div>
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">Trivy</span><span class="gate-desc">CVE scanning — every push, full dependency tree</span></div>
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">gitleaks</span><span class="gate-desc">Secret leak detection across full git history</span></div>
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">njsscan</span><span class="gate-desc">Node.js-specific security patterns</span></div>
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">License check</span><span class="gate-desc">No copyleft contamination</span></div>
-        <div class="gate-row"><span class="gate-check">✓</span><span class="gate-name">OWASP ZAP DAST</span><span class="gate-desc">Weekly dynamic analysis of live API</span></div>
-      </div>
-    </div>
-  </section>
+    <!-- ══════════════════════════════════════════
+         SLIDE 8 — DEBUGGING DARK MODE
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-purple-tint"></div>
+      <div class="accent-line" style="background:linear-gradient(180deg,var(--purple),var(--pink));"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div>
+          <p class="t-tag">debugging story</p>
+          <h2 class="t-title grad-purple">The three-bug chain<br>Claude unravelled.</h2>
+        </div>
 
-  <!-- ── 11. NUMBERS ───────────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">By the Numbers</p>
-      <h2 class="slide-title">What vibe coding<br/>with Claude looks like.</h2>
-      <div class="stats">
-        <div class="stat"><div class="stat-num">16</div><div class="stat-label">PRs merged on develop</div></div>
-        <div class="stat"><div class="stat-num">7</div><div class="stat-label">Parallel security CI gates</div></div>
-        <div class="stat"><div class="stat-num">80%</div><div class="stat-label">Test coverage enforced</div></div>
-        <div class="stat"><div class="stat-num">5</div><div class="stat-label">Auth layers (TOTP, WebAuthn, Duo…)</div></div>
-      </div>
-      <div class="stats" style="margin-top:16px">
-        <div class="stat"><div class="stat-num">~30</div><div class="stat-label">Backend API endpoints</div></div>
-        <div class="stat"><div class="stat-num">0</div><div class="stat-label">Cloud dependencies</div></div>
-        <div class="stat"><div class="stat-num">1</div><div class="stat-label">docker compose up</div></div>
-        <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Emails — your server, your rules</div></div>
-      </div>
-    </div>
-  </section>
+        <div class="grid-2" style="align-items:start;gap:1.25rem;">
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="card card-purple" style="font-size:.82rem;line-height:1.6;">
+              <p style="color:var(--muted);margin-bottom:.6rem;font-size:.72rem;font-family:var(--font-code);">BUG #1 — swatch killing theme</p>
+              Dark swatches (Slate, Midnight, Forest) added <code style="font-family:var(--font-code);color:var(--purple);">html.dark</code> themselves — then theme toggle tried to undo it but the swatch handler was running <em>after</em>.
+            </div>
+            <div class="card card-purple" style="font-size:.82rem;line-height:1.6;">
+              <p style="color:var(--muted);margin-bottom:.6rem;font-size:.72rem;font-family:var(--font-code);">BUG #2 — blocking script race</p>
+              The inline <code style="font-family:var(--font-code);color:var(--purple);">&lt;script&gt;</code> in <code style="font-family:var(--font-code);color:var(--purple);">layout.tsx</code> added <code style="font-family:var(--font-code);color:var(--purple);">.dark</code> for dark swatches on page load — overriding the theme preference already set.
+            </div>
+            <div class="card card-purple" style="font-size:.82rem;line-height:1.6;">
+              <p style="color:var(--muted);margin-bottom:.6rem;font-size:.72rem;font-family:var(--font-code);">BUG #3 — useEffect ordering</p>
+              <code style="font-family:var(--font-code);color:var(--purple);">applyTheme()</code> ran before <code style="font-family:var(--font-code);color:var(--purple);">applyThemeSwatch()</code> — swatch always won.
+            </div>
+          </div>
 
-  <!-- ── 12. WIP / ROADMAP ─────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-section">
-      <p class="eyebrow">Still WIP — What's Next</p>
-      <h2 class="slide-title">Almost there.<br/>Here's what's cooking.</h2>
-      <div class="cards cards-2" style="margin-top:28px">
-        <div class="card">
-          <div class="card-icon">🔑</div>
-          <div class="card-title">OAuth2 / XOAUTH2</div>
-          <div class="card-desc">Sign in with Google &amp; Microsoft — no more app passwords. Backend routes are done, frontend UI incoming.</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">📜</div>
-          <div class="card-title">Rules UI</div>
-          <div class="card-desc">The rule engine is fully built in the backend. A drag-and-drop UI to create filters is next.</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">📱</div>
-          <div class="card-title">Mobile Layout</div>
-          <div class="card-desc">PWA-ready (manifest + service worker), mobile layout polish in progress.</div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🤖</div>
-          <div class="card-title">AI Smart Replies</div>
-          <div class="card-desc">Ollama integration for on-device LLM smart reply generation — fully local, zero data sent to cloud.</div>
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="card" style="border-color:rgba(16,185,129,.3);padding:1.25rem 1.5rem;">
+              <p style="color:var(--green);font-size:.72rem;font-family:var(--font-code);margin-bottom:.6rem;">FIX — separation of concerns</p>
+              <ul class="bullets" style="font-size:.78rem;">
+                <li><code style="font-family:var(--font-code);">applyThemeSwatch</code> → only sets <code style="font-family:var(--font-code);">--swatch-bg</code></li>
+                <li><code style="font-family:var(--font-code);">applyTheme</code> → sole authority on <code style="font-family:var(--font-code);">html.dark</code></li>
+                <li>useEffect order fixed: swatch first, theme last</li>
+                <li>Blocking script: no more <code style="font-family:var(--font-code)">.dark</code> injection</li>
+              </ul>
+            </div>
+            <div class="card" style="font-size:.8rem;color:var(--muted);line-height:1.6;border-color:rgba(245,158,11,.2);">
+              <span style="color:var(--gold);">"</span> Claude traced the bug backwards through three layers of initialization — something that would have taken me a day took 10 minutes. <span style="color:var(--gold);">"</span>
+              <p style="margin-top:.5rem;font-size:.68rem;font-family:var(--font-code);color:rgba(148,163,184,.5);">— flightlesstux</p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
 
-  <!-- ── 13. END ────────────────────────────────────────────────────── -->
-  <section>
-    <div class="slide slide-end">
-      <div class="logo-pair" style="margin-bottom:28px">
-        <div class="logo-box logo-eemail">ee</div>
-        <span class="logo-x">×</span>
-        <div class="logo-box logo-claude">✦</div>
-      </div>
-      <h2 style="font-size:2.4em; margin-bottom:16px">Built by a human.<br/>Engineered by Claude.</h2>
-      <p style="color:rgba(255,255,255,0.5); font-size:0.9em; max-width:480px; line-height:1.6; text-align:center; margin:0 auto">
-        Every architecture decision, every bug fix, every CI gate —
-        a conversation between a developer with a vision
-        and an AI that could actually ship it.
-      </p>
-      <a class="gh-link" href="https://github.com/flightlesstux/eeMail" target="_blank">
-        ⭐ github.com/flightlesstux/eeMail
-      </a>
-      <div class="wip-badge" style="margin-top:20px">
-        <div class="wip-dot"></div>
-        Star it · Watch it · It ships soon
-      </div>
-    </div>
-  </section>
+    <!-- ══════════════════════════════════════════
+         SLIDE 9 — SECURITY GATES
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-cyan-tint" style="background:radial-gradient(ellipse 70% 60% at 50% 80%, rgba(16,185,129,.07) 0%, transparent 70%);"></div>
+      <div class="accent-line" style="background:linear-gradient(180deg,var(--green),var(--cyan));"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div>
+          <p class="t-tag">CI / security</p>
+          <h2 class="t-title grad-cyan">Three gates.<br>No exceptions.</h2>
+        </div>
 
-</div><!-- /slides -->
-</div><!-- /reveal -->
+        <div class="grid-2" style="align-items:start;gap:1.25rem;">
+          <div style="display:flex;flex-direction:column;gap:.6rem;">
+            <p style="font-size:.72rem;font-family:var(--font-code);color:var(--muted);margin-bottom:.1rem;">7 PARALLEL SECURITY JOBS</p>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">npm audit</span></div>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">gitleaks — full git history</span></div>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">trivy — CVEs in deps</span></div>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">CodeQL — SAST</span></div>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">Semgrep — OWASP Top 10</span></div>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">njsscan — Node.js patterns</span></div>
+            <div class="sec-job"><span class="sj-dot"></span><span class="sj-name">license-check — copyleft</span></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="card card-cyan">
+              <p style="font-size:.72rem;font-family:var(--font-code);color:var(--muted);margin-bottom:.7rem;">CI GATES (all 3 required)</p>
+              <div style="display:flex;flex-direction:column;gap:.5rem;">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                  <span class="chip chip-green">✓ CI</span>
+                  <span style="font-size:.78rem;color:var(--muted);">unit + integration + Docker build</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                  <span class="chip chip-green">✓ API Quality</span>
+                  <span style="font-size:.78rem;color:var(--muted);">smoke + contract + negative tests</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                  <span class="chip chip-green">✓ Security</span>
+                  <span style="font-size:.78rem;color:var(--muted);">7 parallel jobs above</span>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="font-size:.78rem;color:var(--muted);line-height:1.6;">
+              Coverage thresholds enforced: <span style="color:var(--green);">80%</span> lines · <span style="color:var(--green);">75%</span> branches · <span style="color:var(--green);">80%</span> functions.<br>OWASP ZAP DAST runs weekly. k6 load tests run weekly.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 10 — BY THE NUMBERS
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="mesh-bg"></div>
+      <div class="accent-line" style="background:linear-gradient(180deg,var(--gold),var(--orange));"></div>
+      <div class="slide-inner" style="gap:2rem;">
+        <div>
+          <p class="t-tag">by the numbers</p>
+          <h2 class="t-title"><span class="grad-orange">Claude + human.</span><br><span style="color:var(--muted);font-weight:300;">What we shipped.</span></h2>
+        </div>
+
+        <div class="grid-4" style="margin:0 auto;width:100%;">
+          <div class="card" style="text-align:center;padding:1.5rem 1rem;">
+            <div class="stat-num grad-orange">25+</div>
+            <div class="stat-label">files changed</div>
+          </div>
+          <div class="card" style="text-align:center;padding:1.5rem 1rem;">
+            <div class="stat-num grad-cyan">7</div>
+            <div class="stat-label">security jobs</div>
+          </div>
+          <div class="card" style="text-align:center;padding:1.5rem 1rem;">
+            <div class="stat-num grad-purple">5</div>
+            <div class="stat-label">test types</div>
+          </div>
+          <div class="card" style="text-align:center;padding:1.5rem 1rem;">
+            <div class="stat-num" style="background:linear-gradient(90deg,var(--gold),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">4</div>
+            <div class="stat-label">auth layers</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:1.25rem;">
+          <div class="card card-orange">
+            <p style="font-size:.72rem;font-family:var(--font-code);color:var(--muted);margin-bottom:.85rem;">COVERAGE TARGETS</p>
+            <div class="pbar-wrap" style="gap:.7rem;">
+              <div>
+                <div class="pbar-label"><span>Lines</span><span style="color:var(--green);">≥ 80%</span></div>
+                <div class="pbar"><div class="pbar-fill" style="width:80%;background:linear-gradient(90deg,var(--orange),var(--gold));"></div></div>
+              </div>
+              <div>
+                <div class="pbar-label"><span>Branches</span><span style="color:var(--green);">≥ 75%</span></div>
+                <div class="pbar"><div class="pbar-fill" style="width:75%;background:linear-gradient(90deg,var(--purple),var(--cyan));"></div></div>
+              </div>
+              <div>
+                <div class="pbar-label"><span>Functions</span><span style="color:var(--green);">≥ 80%</span></div>
+                <div class="pbar"><div class="pbar-fill" style="width:80%;background:linear-gradient(90deg,var(--cyan),var(--green));"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card card-purple">
+            <p style="font-size:.72rem;font-family:var(--font-code);color:var(--muted);margin-bottom:.85rem;">AUTH LAYERS</p>
+            <div style="display:flex;flex-direction:column;gap:.45rem;">
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.8rem;">
+                <span class="chip chip-orange">1</span> Master passphrase (bcrypt + GPG unlock)
+              </div>
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.8rem;">
+                <span class="chip chip-purple">2</span> TOTP — otplib RFC 6238 + 10 backup codes
+              </div>
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.8rem;">
+                <span class="chip chip-cyan">3</span> YubiKey / FIDO2 — @simplewebauthn
+              </div>
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.8rem;">
+                <span class="chip chip-gold">4</span> Duo MFA — Universal Prompt SDK v4
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 11 — ROADMAP
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="bg-orange-tint"></div>
+      <div class="accent-line"></div>
+      <div class="slide-inner" style="gap:1.75rem;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div>
+            <p class="t-tag">what's next</p>
+            <h2 class="t-title grad-orange">WIP Roadmap</h2>
+          </div>
+          <div style="margin-left:auto;">
+            <span class="wip-badge"><span class="wip-dot"></span>actively building</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items:start;gap:1.25rem;">
+          <div style="display:flex;flex-direction:column;gap:.5rem;">
+            <p style="font-size:.68rem;font-family:var(--font-code);color:var(--muted);margin-bottom:.2rem;">COMING SOON</p>
+            <div class="roadmap-item">
+              <span class="rnum">01</span>
+              <span style="font-size:.82rem;flex:1;">Mobile-responsive layout</span>
+              <div class="rbar"><div class="rfill" style="width:70%;background:var(--orange);"></div></div>
+            </div>
+            <div class="roadmap-item">
+              <span class="rnum">02</span>
+              <span style="font-size:.82rem;flex:1;">Drag-and-drop label assignment</span>
+              <div class="rbar"><div class="rfill" style="width:55%;background:var(--purple);"></div></div>
+            </div>
+            <div class="roadmap-item">
+              <span class="rnum">03</span>
+              <span style="font-size:.82rem;flex:1;">S/MIME + PGP email signing</span>
+              <div class="rbar"><div class="rfill" style="width:40%;background:var(--cyan);"></div></div>
+            </div>
+            <div class="roadmap-item">
+              <span class="rnum">04</span>
+              <span style="font-size:.82rem;flex:1;">Contacts & people graph</span>
+              <div class="rbar"><div class="rfill" style="width:30%;background:var(--gold);"></div></div>
+            </div>
+            <div class="roadmap-item">
+              <span class="rnum">05</span>
+              <span style="font-size:.82rem;flex:1;">Import/Export & backup</span>
+              <div class="rbar"><div class="rfill" style="width:20%;background:var(--green);"></div></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:.85rem;">
+            <div class="card card-purple" style="font-size:.82rem;line-height:1.65;">
+              <p style="color:var(--purple);font-size:.72rem;font-family:var(--font-code);margin-bottom:.5rem;">WHY BUILD WITH CLAUDE?</p>
+              <ul class="bullets" style="font-size:.78rem;">
+                <li>Proposes features I hadn't thought of</li>
+                <li>Catches bugs across three files at once</li>
+                <li>Writes tests while writing code</li>
+                <li>Remembers architecture decisions</li>
+                <li>Never gets tired of refactoring</li>
+              </ul>
+            </div>
+            <div class="card" style="font-size:.8rem;color:var(--muted);line-height:1.6;border-color:rgba(245,158,11,.2);">
+              eeMail is a real proof that a single person + Claude can produce production-grade, security-hardened software — faster than a team could plan a sprint.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">eeMail × Claude <span>flightlesstux</span></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 12 — END
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="mesh-bg" style="background:
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(255,94,58,.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 20%, rgba(139,92,246,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0,229,255,.06) 0%, transparent 70%);"></div>
+      <div class="slide-inner center" style="gap:2rem;">
+        <div class="logomark-lg">@</div>
+
+        <div>
+          <h1 class="t-hero grad-all glow-purple">eeMail</h1>
+          <p class="t-sub" style="margin-top:.5rem;">Self-hosted. Encrypted. Built with Claude.</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center;">
+          <div class="terminal" style="min-width:340px;font-size:.8rem;">
+            <div class="terminal-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="title-t">quick start</span>
+            </div>
+            <div class="terminal-body">
+              <div><span class="prompt">$</span> <span class="cmd">git clone github.com/flightlesstux/eemail</span></div>
+              <div><span class="prompt">$</span> <span class="cmd">docker compose up -d</span></div>
+              <div><span class="out">✓</span> <span class="cmd">open http://localhost:3000</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;">
+          <span class="chip chip-orange">github.com/flightlesstux/eemail</span>
+          <span class="chip chip-purple">built with claude code</span>
+          <span class="chip chip-gold">⚠ wip — coming soon</span>
+        </div>
+
+        <p style="font-size:.72rem;font-family:var(--font-code);color:rgba(148,163,184,.35);margin-top:.5rem;">
+          made by flightlesstux × claude sonnet
+        </p>
+      </div>
+    </section>
+
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script>
+  // ═══ STAR PARTICLES ═══
+  (function () {
+    const canvas = document.getElementById('stars-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, stars = [];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function initStars() {
+      stars = Array.from({ length: 180 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + .2,
+        a: Math.random(),
+        da: (Math.random() - .5) * .003,
+        dx: (Math.random() - .5) * .08,
+        dy: (Math.random() - .5) * .04,
+      }));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      stars.forEach(s => {
+        s.a += s.da;
+        if (s.a < .05 || s.a > 1) s.da *= -1;
+        s.x = (s.x + s.dx + W) % W;
+        s.y = (s.y + s.dy + H) % H;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(139,92,246,${s.a * .6})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => { resize(); initStars(); });
+    resize(); initStars(); draw();
+  })();
+
+  // ═══ REVEAL ═══
   Reveal.initialize({
     hash: true,
-    slideNumber: true,
+    slideNumber: 'c/t',
+    progress: true,
+    controls: true,
+    center: false,
     transition: 'fade',
     transitionSpeed: 'fast',
     backgroundTransition: 'fade',
-    controls: true,
-    progress: true,
-    center: false,
     width: 1280,
     height: 720,
-    margin: 0,
-    plugins: [],
   });
 </script>
 </body>
