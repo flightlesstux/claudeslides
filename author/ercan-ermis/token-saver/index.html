@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="flightlesstux">
+  <meta name="description" content="An MCP plugin that watches every AI output for token waste — fires warnings, errors, and alerts before your context burns.">
+  <title>token-saver — Built with Claude</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0d14;
+      --surface:   #111622;
+      --border:    #1e2a3a;
+      --accent:    #3b82f6;
+      --accent2:   #06b6d4;
+      --warn:      #f59e0b;
+      --ok:        #22c55e;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --mono:      'JetBrains Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px 64px;
+      gap: 40px;
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    .header {
+      text-align: center;
+      max-width: 720px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59,130,246,.12);
+      border: 1px solid rgba(59,130,246,.3);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .3; }
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -.03em;
+      background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      font-weight: 400;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── CARDS ──────────────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 840px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: border-color .2s;
+    }
+
+    .card:hover { border-color: var(--accent); }
+
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: .95rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── ALERT DEMO ─────────────────────────────────── */
+    .demo {
+      width: 100%;
+      max-width: 840px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .demo-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: .78rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-header::before {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+    }
+
+    .demo-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .alert-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: .82rem;
+    }
+
+    .alert-row.info    { background: rgba(59,130,246,.08);  border-left: 3px solid var(--accent); }
+    .alert-row.warn    { background: rgba(245,158,11,.08);  border-left: 3px solid var(--warn); }
+    .alert-row.error   { background: rgba(239,68,68,.08);   border-left: 3px solid #ef4444; }
+
+    .alert-level {
+      font-weight: 700;
+      font-size: .7rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .info  .alert-level { color: var(--accent); }
+    .warn  .alert-level { color: var(--warn); }
+    .error .alert-level { color: #ef4444; }
+
+    .alert-msg { color: var(--text); line-height: 1.5; }
+    .alert-meta { color: var(--muted); font-size: .75rem; }
+
+    /* ── USAGE TABLE ────────────────────────────────── */
+    .usage-section {
+      width: 100%;
+      max-width: 840px;
+    }
+
+    .section-title {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .usage-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .usage-table tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .usage-table tr:last-child { border-bottom: none; }
+
+    .usage-table tr:hover td { background: rgba(59,130,246,.04); }
+
+    .usage-table td {
+      padding: 14px 20px;
+      font-size: .9rem;
+      vertical-align: middle;
+      transition: background .15s;
+    }
+
+    .usage-table td:first-child {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      width: 32%;
+      white-space: nowrap;
+    }
+
+    .usage-table td:last-child {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: .88rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(59,130,246,.12);
+      border: 1px solid rgba(59,130,246,.25);
+      color: var(--accent);
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-family: var(--mono);
+    }
+
+    .chip.green {
+      background: rgba(34,197,94,.1);
+      border-color: rgba(34,197,94,.25);
+      color: var(--ok);
+    }
+
+    /* ── FOOTER ─────────────────────────────────────── */
+    footer {
+      color: var(--muted);
+      font-size: .8rem;
+      text-align: center;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge"><span class="dot"></span> Built with Claude · v1.0.0</div>
+    <h1>token-<span>saver</span></h1>
+    <p class="subtitle">
+      An MCP plugin that watches every AI output for token waste —
+      fires warnings, errors, and alerts before your context burns.
+    </p>
+  </div>
+
+  <!-- FEATURE CARDS -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🔍</div>
+      <h3>Noise Detection</h3>
+      <p>Detects logs, stack traces, ANSI codes, and repetitive history eating your context window.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🚨</div>
+      <h3>Alert Levels</h3>
+      <p>Four thresholds — info, warning, error, alert — configurable per project via <code style="font-family:var(--mono);font-size:.85em;color:var(--accent)">.token-saver.json</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌐</div>
+      <h3>Model Agnostic</h3>
+      <p>Works with Claude, GPT, Gemini, or any model output. Any MCP client. Zero lock-in.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📦</div>
+      <h3>Zero Config</h3>
+      <p>One <code style="font-family:var(--mono);font-size:.85em;color:var(--accent)">npx -y token-saver-mcp</code> and you're live. No build step needed.</p>
+    </div>
+  </div>
+
+  <!-- LIVE DEMO PREVIEW -->
+  <div class="demo">
+    <div class="demo-header">token-saver-mcp · monitor mode · session active</div>
+    <div class="demo-body">
+      <div class="alert-row info">
+        <span class="alert-level">info</span>
+        <div>
+          <div class="alert-msg">Output analyzed · 312 tokens · type: tool_result</div>
+          <div class="alert-meta">below warning threshold (1000) · no suppression</div>
+        </div>
+      </div>
+      <div class="alert-row warn">
+        <span class="alert-level">warning</span>
+        <div>
+          <div class="alert-msg">Large log output detected · 4,218 tokens · 94% noise patterns</div>
+          <div class="alert-meta">matches [INFO] [DEBUG] ANSI timestamps · suppressLogs: true → shouldSuppress</div>
+        </div>
+      </div>
+      <div class="alert-row error">
+        <span class="alert-level">error</span>
+        <div>
+          <div class="alert-msg">Repetitive history detected · 6,104 tokens · 3 near-duplicate turns</div>
+          <div class="alert-meta">cumulative session waste: ~18,400 tokens · consider truncating history</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USAGE DETAILS TABLE -->
+  <div class="usage-section">
+    <div class="section-title">Usage Details</div>
+    <table class="usage-table">
+      <tbody>
+        <tr>
+          <td>Model</td>
+          <td><span class="chip">claude-sonnet-4-6</span></td>
+        </tr>
+        <tr>
+          <td>Tokens used</td>
+          <td>~460,000 input · ~72,000 output &nbsp;<span class="chip">~532k total</span></td>
+        </tr>
+        <tr>
+          <td>Session duration</td>
+          <td>~3 hours (2 sessions, context compacted once)</td>
+        </tr>
+        <tr>
+          <td>Tech stack</td>
+          <td>TypeScript · Node.js · MCP SDK · GitHub Actions · semantic-release · Docker · GitHub Pages</td>
+        </tr>
+        <tr>
+          <td>What was achieved</td>
+          <td>Designed, built, and shipped token-saver MCP v1.0.0 — full plugin with alert engine, session stats, suppress logic, website, CI/CD, npm publish, and Docker Hub release.</td>
+        </tr>
+        <tr>
+          <td>Estimated cost</td>
+          <td><span class="chip green">~$2.46 USD</span> &nbsp;<span style="color:var(--muted);font-size:.8rem">($3/MTok in · $15/MTok out)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="https://github.com/flightlesstux/token-saver" target="_blank">github.com/flightlesstux/token-saver</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.npmjs.com/package/token-saver-mcp" target="_blank">npm: token-saver-mcp</a>
+    &nbsp;·&nbsp; flightlesstux &nbsp;·&nbsp; claudeslides.com
+  </footer>
+
+</body>
+</html>
