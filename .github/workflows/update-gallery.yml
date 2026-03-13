@@ -35,6 +35,9 @@ jobs:
       - name: Generate covers
         run: python .github/scripts/generate_covers.py
 
+      - name: Inject missing SEO tags
+        run: python .github/scripts/inject_seo.py
+
       - name: Generate submissions.json
         run: python .github/scripts/generate_submissions.py
 

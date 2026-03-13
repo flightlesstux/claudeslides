@@ -25,27 +25,20 @@ author/{author-slug}/{slide-slug}/index.html
 ```html
 <meta name="author" content="Author Name">
 <meta name="description" content="One sentence about what was built with Claude">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://claudeslides.com/author/{slug}/">
 ```
 
-### Recommended SEO Meta Tags
+### Optional but Recommended
 
 ```html
-<!-- Open Graph (social sharing + gallery card) -->
-<meta property="og:type" content="article">
-<meta property="og:site_name" content="ClaudeSlides">
-<meta property="og:url" content="https://claudeslides.com/author/{slug}/">
-<meta property="og:title" content="Page Title">
-<meta property="og:description" content="One sentence about what was built with Claude">
-<meta property="og:image" content="https://...">  <!-- 1200×630px recommended -->
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Page Title">
-<meta name="twitter:description" content="One sentence about what was built with Claude">
-<meta name="twitter:image" content="https://...">
+<!-- og:image — 1200×630px. If omitted, CI generates a branded cover.jpg automatically. -->
+<meta property="og:image" content="https://...">
 ```
+
+> **CI auto-injects the following if missing** (via `inject_seo.py` — never overwrites existing tags):
+> `robots`, `canonical`, `og:type`, `og:site_name`, `og:url`, `og:title`, `og:description`,
+> `twitter:card`, `twitter:title`, `twitter:description`
+>
+> You only need to provide `author` and `description`. Everything else is handled by the pipeline.
 
 ---
 
@@ -79,10 +72,11 @@ author/{author-slug}/{slide-slug}/index.html
 
 ### On merge to `main` (`update-gallery.yml`)
 
-1. Runs `generate_submissions.py`
-2. Extracts from `author/*/index.html`: `<title>`, `meta[name=author]`, `meta[name=description]`, `meta[property=og:image]`
-3. Writes `submissions.json`
-4. Commits back to `main`
+1. Runs `generate_covers.py` — generates `cover.jpg` (1200×630) next to each `index.html` that has no `og:image`
+2. Runs `inject_seo.py` — injects missing SEO/OG/Twitter meta tags into each `index.html` (non-destructive)
+3. Runs `generate_submissions.py` — extracts metadata, writes `submissions.json`
+4. Runs `generate_sitemap.py` — regenerates `sitemap.xml` with all current submissions
+5. Commits all changes back to `main`
 
 ---
 

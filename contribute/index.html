@@ -262,6 +262,78 @@
   .step p { font-size: 0.78rem; color: var(--muted); line-height: 1.85; font-weight: 300; }
   .step p code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.75rem; color: var(--gold2); opacity: 0.7; }
 
+  /* ── CLAUDE SECTION ── */
+  .claude-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 7rem 3rem;
+  }
+
+  .claude-section h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
+  .claude-section > p {
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    line-height: 1.85;
+  }
+
+  .prompt-block {
+    position: relative;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    overflow-x: auto;
+  }
+
+  .prompt-block pre {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .copy-btn.copied { border-color: var(--gold); color: var(--gold); }
+
+  .claude-note {
+    margin-top: 1.5rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    border-left: 1px solid var(--gold);
+    padding-left: 1rem;
+    opacity: 0.8;
+    line-height: 1.8;
+  }
+
   /* ── META TAGS ── */
   .meta-section {
     max-width: 900px;
@@ -532,6 +604,47 @@
   </div>
 </section>
 
+<!-- CONTRIBUTE WITH CLAUDE -->
+<section class="claude-section">
+  <h2>Contribute with Claude in 2 minutes.</h2>
+  <p>
+    Don't know how to write HTML? That's fine — Claude does. Copy the prompt below,
+    paste it into <a href="https://claude.ai" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">claude.ai</a>,
+    and it will generate a ready-to-submit page for you. No coding knowledge required.
+  </p>
+
+  <div class="prompt-block" id="promptBlock">
+    <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
+    <pre id="promptText">Hi Claude! I want to submit my project to ClaudeSlides — an open gallery at claudeslides.com where people share what they built with Claude.
+
+Please create a single self-contained index.html file for my submission. Here's what I want to share:
+
+[DESCRIBE YOUR PROJECT — what you built, learned, or solved with Claude's help]
+
+The file must follow these rules:
+- All CSS and JS inline (no external files, CDN links are fine)
+- Include these meta tags in &lt;head&gt;:
+    &lt;meta name="author" content="[YOUR NAME]"&gt;
+    &lt;meta name="description" content="[ONE SENTENCE ABOUT YOUR PROJECT]"&gt;
+- Design it however you like — it's your canvas
+- It should tell my story in a visually appealing way
+
+After generating the file, remind me to:
+1. Fork https://github.com/flightlesstux/claudeslides
+2. Create folder: author/[my-slug]/[project-slug]/
+3. Save the file as index.html inside that folder
+4. Open a pull request
+
+Thanks!</pre>
+  </div>
+
+  <p class="claude-note">
+    ✦ &nbsp;No og:image needed — if you don't include one, the CI pipeline automatically
+    generates a branded cover image for your gallery card.
+    SEO tags are also auto-injected if missing. Just focus on your story.
+  </p>
+</section>
+
 <!-- META TAGS -->
 <section class="meta-section">
   <h2>Two meta tags. Required.</h2>
@@ -610,5 +723,16 @@
   <p style="margin-top:0.5rem">Made with ❤️ in the Netherlands 🇳🇱 &nbsp;&middot;&nbsp; by Ercan Ermis &nbsp;&middot;&nbsp; Built with Claude ✦</p>
 </footer>
 
+<script>
+function copyPrompt() {
+  const text = document.getElementById('promptText').innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
 </body>
 </html>
