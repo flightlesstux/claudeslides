@@ -885,6 +885,37 @@ Thanks!</pre>
     <button class="copy-btn" id="copyOnelineBtn" onclick="copyOneliner()">Copy</button>
     <pre id="onelineText"><span class="prompt-dollar">$</span>claude "I want to submit my project to claudeslides.com. Please: (1) fetch https://raw.githubusercontent.com/flightlesstux/claudeslides/main/CONTRIBUTING.md and read the contribution rules, (2) ask me to describe what I built or learned with Claude, (3) create the file at author/{my-slug}/{my-project-slug}/index.html with all CSS/JS inline and the required meta tags filled in, (4) fork https://github.com/flightlesstux/claudeslides using gh CLI, clone it locally, commit my file on a new branch, and open a pull request."</pre>
   </div>
+
+  <p class="contribute-sub-label">Option 3 — Techie prompt (full session audit)</p>
+  <div class="prompt-block" id="techieBlock">
+    <button class="copy-btn" id="copyTechieBtn" onclick="copyTechie()">Copy</button>
+    <pre id="techieText">Create a self-contained index.html slide for my claudeslides.com submission about:
+
+[DESCRIBE YOUR PROJECT — what you built or learned with Claude]
+
+Rules:
+- All CSS/JS inline (CDN links OK); no og:image (CI generates it)
+- &lt;meta name="author" content="[your-slug]"&gt;
+- &lt;meta name="description" content="[one sentence]"&gt;
+
+The page MUST include a visible "Usage Details" section rendered as a polished HTML table (style it to match your design) with exactly these rows:
+
+| Detail             | Value                                   |
+|--------------------|-----------------------------------------|
+| Model              | [model name used this session]          |
+| Tokens used        | [total input + output tokens]           |
+| Session duration   | [estimated time, e.g. ~12 min]          |
+| Tech stack         | [languages, frameworks, tools used]     |
+| What was achieved  | [1–2 sentence summary]                  |
+| Estimated cost     | $[USD for this session, from API pricing]|
+
+Pull the model name, token counts, and cost from this conversation's metadata. Estimate duration from the conversation flow. Make the table look intentional — not an afterthought.
+
+After generating, remind me to:
+1. Fork https://github.com/flightlesstux/claudeslides
+2. Save as author/[slug]/[project-slug]/index.html
+3. Open a pull request</pre>
+  </div>
   <p class="claude-note">
     ✦ &nbsp;No og:image needed — CI auto-generates a branded cover image for your gallery card.
     SEO tags are also auto-injected. Just focus on your story.
@@ -1004,6 +1035,15 @@ function copyOneliner() {
   const raw = document.getElementById('onelineText').innerText;
   navigator.clipboard.writeText(raw.replace(/^\$\s*/, '')).then(function() {
     const btn = document.getElementById('copyOnelineBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function copyTechie() {
+  const text = document.getElementById('techieText').innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    const btn = document.getElementById('copyTechieBtn');
     btn.textContent = 'Copied';
     btn.classList.add('copied');
     setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);

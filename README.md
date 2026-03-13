@@ -27,6 +27,41 @@ Automated content checks run instantly. A maintainer reviews and merges. Your pa
 Human guide → [claudeslides.com/contribute](https://claudeslides.com/contribute/)
 Agent/AI guide → [CONTRIBUTING.md](CONTRIBUTING.md)
 
+## Techie prompt — full session audit
+
+Paste this into any Claude client. It generates your slide **and** makes Claude introspect the session, embedding a polished **Usage Details** table on the page:
+
+```
+Create a self-contained index.html slide for my claudeslides.com submission about:
+
+[DESCRIBE YOUR PROJECT — what you built or learned with Claude]
+
+Rules:
+- All CSS/JS inline (CDN links OK); no og:image (CI generates it)
+- <meta name="author" content="[your-slug]">
+- <meta name="description" content="[one sentence]">
+
+The page MUST include a visible "Usage Details" section rendered as a polished HTML table with exactly these rows:
+
+| Detail             | Value                                    |
+|--------------------|------------------------------------------|
+| Model              | [model name used this session]           |
+| Tokens used        | [total input + output tokens]            |
+| Session duration   | [estimated time, e.g. ~12 min]           |
+| Tech stack         | [languages, frameworks, tools used]      |
+| What was achieved  | [1–2 sentence summary]                   |
+| Estimated cost     | $[USD for this session, from API pricing]|
+
+Pull the model name, token counts, and cost from this conversation's metadata. Estimate duration from the conversation flow. Style the table to match your page design.
+
+After generating, remind me to:
+1. Fork https://github.com/flightlesstux/claudeslides
+2. Save as author/[slug]/[project-slug]/index.html
+3. Open a pull request
+```
+
+> No `og:image` needed — CI auto-generates a branded cover image for your gallery card.
+
 ## What counts as a submission?
 
 Anything Claude helped you with:
