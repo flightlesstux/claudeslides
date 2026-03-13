@@ -22,6 +22,17 @@
     "date": "2026-03-13"
   },
   {
+    "author_slug": "ercan-ermis",
+    "slug": "prompt-caching",
+    "url": "author/ercan-ermis/prompt-caching/",
+    "title": "ClaudeSlides × Prompt Caching — Built with Claude, Powered by Claude",
+    "author": "Ercan Ermis",
+    "description": "How I built ClaudeSlides with Claude — and how prompt caching makes every conversation blazing fast. A story of co-creation.",
+    "og_image": "https://claudeslides.com/author/ercan-ermis/prompt-caching/cover.jpg",
+    "cover_url": "https://claudeslides.com/author/ercan-ermis/prompt-caching/cover.jpg",
+    "date": "2026-03-13"
+  },
+  {
     "author_slug": "flightlesstux",
     "slug": "eemail",
     "url": "author/flightlesstux/eemail/",
