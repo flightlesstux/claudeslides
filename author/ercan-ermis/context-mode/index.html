@@ -1,822 +1,938 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>context-mode × Claude — Building an MCP Context Window Optimizer</title>
-<meta name="author" content="Ercan Ermis">
-<meta name="description" content="How Claude helped build context-mode: an MCP plugin that prevents raw tool output from flooding the AI agent's context window.">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://claudeslides.com/author/ercan-ermis/context-mode/">
-<meta property="og:type" content="article">
-<meta property="og:site_name" content="ClaudeSlides">
-<meta property="og:url" content="https://claudeslides.com/author/ercan-ermis/context-mode/">
-<meta property="og:title" content="context-mode × Claude — Building an MCP Context Window Optimizer">
-<meta property="og:description" content="How Claude helped build context-mode: an MCP plugin that prevents raw tool output from flooding the AI agent's context window.">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="context-mode × Claude — Building an MCP Context Window Optimizer">
-<meta name="twitter:description" content="How Claude helped build context-mode: an MCP plugin that prevents raw tool output from flooding the AI agent's context window.">
-<style>
-  :root {
-    --green: #00ff88;
-    --cyan: #00d4ff;
-    --purple: #7c3aed;
-    --red: #ff4444;
-    --orange: #ff8c00;
-    --bg: #0a0a0f;
-    --bg2: #0f0f1a;
-    --bg3: #141428;
-    --text: #e0e0e0;
-    --muted: #666;
-    --card: #12121f;
-    --border: #1e1e3a;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    overflow-x: hidden;
-  }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-    padding: 2rem;
-  }
-
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridPulse 4s ease-in-out infinite;
-  }
-
-  @keyframes gridPulse {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-
-  .hero-glow {
-    position: absolute;
-    width: 700px;
-    height: 700px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
-    animation: glowPulse 3s ease-in-out infinite;
-  }
-
-  .hero-glow-2 {
-    position: absolute;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
-    top: 20%;
-    right: 15%;
-    animation: glowPulse 4s ease-in-out infinite reverse;
-  }
-
-  @keyframes glowPulse {
-    0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.1); opacity: 1; }
-  }
-
-  .hero-content { position: relative; z-index: 1; }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 1rem;
-    border: 1px solid var(--cyan);
-    border-radius: 100px;
-    font-size: 0.75rem;
-    color: var(--cyan);
-    margin-bottom: 2rem;
-    letter-spacing: 0.1em;
-    animation: fadeInDown 0.8s ease;
-  }
-
-  .badge-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--cyan);
-    animation: blink 1s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-
-  .hero h1 {
-    font-size: clamp(2.5rem, 6vw, 5rem);
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-    animation: fadeInUp 0.8s ease 0.2s both;
-  }
-
-  .hero h1 span.green { color: var(--green); }
-  .hero h1 span.cyan { color: var(--cyan); }
-  .hero h1 span.purple { color: #a78bfa; }
-
-  .hero-sub {
-    font-size: 1.1rem;
-    color: var(--muted);
-    margin-bottom: 3rem;
-    max-width: 640px;
-    line-height: 1.7;
-    animation: fadeInUp 0.8s ease 0.4s both;
-  }
-
-  .hero-stats {
-    display: flex;
-    gap: 3rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    animation: fadeInUp 0.8s ease 0.6s both;
-  }
-
-  .hero-stat { text-align: center; }
-
-  .hero-stat .number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--cyan);
-    display: block;
-  }
-
-  .hero-stat .number.green { color: var(--green); }
-  .hero-stat .number.purple { color: #a78bfa; }
-
-  .hero-stat .label {
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .scroll-hint {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.15em;
-    animation: bounce 2s ease-in-out infinite;
-  }
-
-  @keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(8px); }
-  }
-
-  /* SECTIONS */
-  section {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 5rem 2rem;
-  }
-
-  .section-label {
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    margin-bottom: 0.75rem;
-  }
-
-  .section-label.green { color: var(--green); }
-  .section-label.purple { color: #a78bfa; }
-
-  .section-title {
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    font-weight: 800;
-    margin-bottom: 1rem;
-    line-height: 1.2;
-  }
-
-  .section-desc {
-    color: var(--muted);
-    font-size: 0.95rem;
-    max-width: 600px;
-    line-height: 1.7;
-    margin-bottom: 3rem;
-  }
-
-  /* PROBLEM SECTION */
-  .problem-visual {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .problem-visual::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--red), var(--orange));
-  }
-
-  .terminal-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .terminal-dot {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-  }
-
-  .terminal-dot.red { background: #ff5f57; }
-  .terminal-dot.yellow { background: #febc2e; }
-  .terminal-dot.green { background: #28c840; }
-
-  .terminal-title {
-    margin-left: 0.5rem;
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
-
-  .terminal-body {
-    font-size: 0.8rem;
-    line-height: 1.8;
-  }
-
-  .terminal-line { display: flex; gap: 1rem; }
-  .terminal-prompt { color: var(--green); flex-shrink: 0; }
-  .terminal-cmd { color: var(--cyan); }
-  .terminal-output { color: var(--muted); }
-  .terminal-overflow { color: var(--red); font-weight: 700; }
-
-  /* FLOW DIAGRAM */
-  .flow-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-  }
-
-  .flow-step {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    position: relative;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .flow-step:hover {
-    border-color: var(--cyan);
-    transform: translateY(-4px);
-  }
-
-  .flow-step.highlight { border-color: var(--purple); }
-  .flow-step.highlight:hover { border-color: #a78bfa; }
-
-  .flow-num {
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 0.75rem;
-  }
-
-  .flow-icon {
-    font-size: 1.8rem;
-    margin-bottom: 0.75rem;
-    display: block;
-  }
-
-  .flow-name {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 0.5rem;
-  }
-
-  .flow-name .cyan { color: var(--cyan); }
-  .flow-name .green { color: var(--green); }
-  .flow-name .purple { color: #a78bfa; }
-
-  .flow-desc {
-    font-size: 0.8rem;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  /* ARCHITECTURE */
-  .arch-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-  }
-
-  .arch-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .arch-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .arch-card.green-accent { border-top: 3px solid var(--green); }
-  .arch-card.cyan-accent { border-top: 3px solid var(--cyan); }
-  .arch-card.purple-accent { border-top: 3px solid var(--purple); }
-
-  .arch-card:hover.green-accent { border-color: var(--green); }
-  .arch-card:hover.cyan-accent { border-color: var(--cyan); }
-  .arch-card:hover.purple-accent { border-color: var(--purple); }
-
-  .arch-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-  }
-
-  .arch-label.green { color: var(--green); }
-  .arch-label.cyan { color: var(--cyan); }
-  .arch-label.purple { color: #a78bfa; }
-
-  .arch-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-  }
-
-  .arch-desc {
-    font-size: 0.82rem;
-    color: var(--muted);
-    line-height: 1.7;
-    margin-bottom: 1rem;
-  }
-
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-
-  .tag {
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-
-  .tag.green { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
-  .tag.cyan { background: rgba(0,212,255,0.1); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
-  .tag.purple { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
-  .tag.muted { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
-
-  /* META-LOOP */
-  .meta-box {
-    background: var(--card);
-    border: 1px solid var(--purple);
-    border-radius: 12px;
-    padding: 2rem;
-    position: relative;
-    overflow: hidden;
-    margin-top: 2rem;
-  }
-
-  .meta-box::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--purple), var(--cyan));
-  }
-
-  .meta-glow {
-    position: absolute;
-    top: -50px; right: -50px;
-    width: 200px; height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .meta-title {
-    font-size: 1.3rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    color: #a78bfa;
-  }
-
-  .meta-sub {
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-  }
-
-  .meta-code {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.25rem;
-    font-size: 0.78rem;
-    line-height: 1.8;
-    color: var(--text);
-  }
-
-  .meta-code .comment { color: var(--muted); }
-  .meta-code .key { color: var(--cyan); }
-  .meta-code .val { color: var(--green); }
-  .meta-code .str { color: #fbbf24; }
-
-  /* CLAUDE CONTRIBUTIONS */
-  .contrib-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-
-  .contrib-item {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.25rem;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-    transition: border-color 0.2s;
-  }
-
-  .contrib-item:hover { border-color: var(--green); }
-
-  .contrib-icon {
-    font-size: 1.4rem;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
-
-  .contrib-text h4 {
-    font-size: 0.9rem;
-    font-weight: 700;
-    margin-bottom: 0.3rem;
-    color: var(--text);
-  }
-
-  .contrib-text p {
-    font-size: 0.78rem;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  /* DIVIDER */
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 0;
-  }
-
-  /* FOOTER */
-  footer {
-    text-align: center;
-    padding: 3rem 2rem;
-    color: var(--muted);
-    font-size: 0.78rem;
-    letter-spacing: 0.05em;
-  }
-
-  footer a {
-    color: var(--cyan);
-    text-decoration: none;
-  }
-
-  footer a:hover { text-decoration: underline; }
-
-  /* KEYFRAMES */
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 640px) {
-    .hero-stats { gap: 1.5rem; }
-    .hero-stat .number { font-size: 1.8rem; }
-    section { padding: 3rem 1rem; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Ercan Ermis">
+  <meta name="description" content="How I built context-mode with Claude — an MCP plugin that keeps raw tool output out of your context window so AI agents stay focused.">
+  <title>context-mode — Protecting the AI Agent Context Window</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --chaos:      #ff4444;
+      --chaos-dim:  rgba(255,68,68,0.18);
+      --orange:     #ff8800;
+      --filter:     #00ff88;
+      --filter-dim: rgba(0,255,136,0.12);
+      --clean:      #00d4ff;
+      --clean-dim:  rgba(0,212,255,0.12);
+      --bg:         #080c10;
+      --bg2:        #0d1117;
+      --bg3:        #111820;
+      --text:       #c9d1d9;
+      --muted:      #6e7681;
+      --mono:       'Courier New', 'Lucida Console', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* scanline */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--filter); border-radius: 3px; }
+
+    /* ── layout ── */
+    .section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 5rem 2rem;
+      position: relative;
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── eyebrow / titles ── */
+    .eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--filter);
+      margin-bottom: 0.65rem;
+    }
+    .eyebrow::before { content: '// '; color: var(--muted); }
+
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ════════════════════════════════
+       HERO
+    ════════════════════════════════ */
+    #hero { background: var(--bg); overflow: hidden; }
+
+    /* animated noise streams */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    .ns {
+      position: absolute;
+      font-size: 10px;
+      color: var(--chaos);
+      white-space: pre;
+      line-height: 1.45;
+      font-family: var(--mono);
+      animation: nsDown linear infinite;
+    }
+
+    @keyframes nsDown {
+      from { transform: translateY(-50%); }
+      to   { transform: translateY(100vh); }
+    }
+
+    /* hero text */
+    .hero-inner { position: relative; z-index: 1; }
+
+    .hero-pill {
+      display: inline-block;
+      border: 1px solid var(--filter);
+      color: var(--filter);
+      font-size: 0.7rem;
+      padding: 0.22rem 0.8rem;
+      border-radius: 2px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      box-shadow: 0 0 14px var(--filter-dim);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+      font-size: clamp(3.2rem, 11vw, 7.5rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.1rem;
+    }
+
+    .t-ctx  { color: var(--clean);  text-shadow: 0 0 35px var(--clean), 0 0 70px rgba(0,212,255,0.25); }
+    .t-dash { color: var(--muted); }
+    .t-mode { color: var(--filter); text-shadow: 0 0 35px var(--filter), 0 0 70px rgba(0,255,136,0.25); }
+
+    .hero-tag {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: var(--muted);
+      max-width: 580px;
+      margin-bottom: 3rem;
+    }
+    .hero-tag strong { color: var(--clean); font-weight: 400; }
+
+    /* token bar */
+    .tbar-wrap { max-width: 520px; }
+
+    .tbar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .tbar-labels .lc { color: var(--chaos); }
+    .tbar-labels .lf { color: var(--filter); }
+
+    .tbar-track {
+      height: 16px;
+      background: var(--bg3);
+      border: 1px solid #1e2937;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tbar-chaos {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, var(--chaos), var(--orange));
+      width: 92%;
+      animation: tbPulse 3.5s ease-in-out infinite;
+    }
+
+    .tbar-clean {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, var(--filter), var(--clean));
+      width: 0%;
+      animation: tbGrow 3.5s ease-in-out infinite;
+    }
+
+    @keyframes tbPulse {
+      0%, 100% { width: 92%; }
+      50%       { width: 95%; }
+    }
+    @keyframes tbGrow {
+      0%, 35% { width: 0%;  opacity: 0; }
+      100%    { width: 28%; opacity: 1; }
+    }
+
+    .tbar-foot {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      margin-top: 0.3rem;
+      color: var(--muted);
+    }
+    .tbar-foot .ff { color: var(--filter); }
+
+    /* ════════════════════════════════
+       PROBLEM
+    ════════════════════════════════ */
+    #problem { background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%); }
+
+    h2.h-chaos { color: var(--chaos); }
+
+    .flood-terminal {
+      background: var(--bg2);
+      border: 1px solid rgba(255,68,68,0.45);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 0 45px rgba(255,68,68,0.1), inset 0 0 30px rgba(255,68,68,0.03);
+      margin-bottom: 2rem;
+    }
+
+    .tbar {
+      background: #161b22;
+      padding: 0.45rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dr { background: #ff5f56; }
+    .dy { background: #ffbd2e; }
+    .dg { background: #27c93f; }
+
+    .tbar-name {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-left: 0.4rem;
+    }
+
+    .flood-body {
+      height: 260px;
+      overflow: hidden;
+      position: relative;
+      padding: 0.8rem 1.1rem;
+    }
+
+    .flood-scroll { animation: flUp 14s linear infinite; }
+
+    @keyframes flUp {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-58%); }
+    }
+
+    .fl {
+      font-size: 0.72rem;
+      line-height: 1.75;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .fc { color: var(--chaos); }
+    .fo { color: var(--orange); }
+    .fd { color: #2d3f52; }
+    .fw { color: #d4a017; }
+
+    .flood-fade {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 72px;
+      background: linear-gradient(transparent, var(--bg2));
+      pointer-events: none;
+    }
+
+    .prob-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+    }
+
+    .prob-card {
+      background: var(--bg3);
+      border: 1px solid rgba(255,68,68,0.18);
+      border-radius: 6px;
+      padding: 1.1rem;
+    }
+
+    .prob-card-ico { font-size: 1.4rem; margin-bottom: 0.45rem; }
+
+    .prob-card-title {
+      font-size: 0.75rem;
+      color: var(--chaos);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+
+    .prob-card-body { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
+
+    /* ════════════════════════════════
+       PIPELINE
+    ════════════════════════════════ */
+    #pipeline { background: var(--bg2); }
+
+    h2.h-filter { color: var(--filter); }
+
+    .pipe { display: flex; flex-direction: column; }
+
+    .pipe-step {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 0.9rem;
+      align-items: start;
+      position: relative;
+    }
+
+    .pipe-step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 22px;
+      top: 46px;
+      width: 2px;
+      height: calc(100% - 6px);
+      background: linear-gradient(180deg, var(--filter), var(--clean));
+      opacity: 0.35;
+    }
+
+    .pnode {
+      width: 46px; height: 46px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      position: relative; z-index: 1;
+    }
+
+    .pn-chaos  { background: rgba(255,68,68,0.1);  border: 1px solid rgba(255,68,68,0.35); }
+    .pn-filter { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.35); box-shadow: 0 0 14px rgba(0,255,136,0.12); }
+    .pn-clean  { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.35); box-shadow: 0 0 14px rgba(0,212,255,0.12); }
+
+    .pbody { padding-bottom: 1.8rem; padding-top: 0.45rem; }
+
+    .plabel {
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .lc2 { color: var(--chaos); }
+    .lf2 { color: var(--filter); }
+    .lk2 { color: var(--clean); }
+
+    .ptitle { font-size: 0.95rem; font-weight: 700; color: #e6edf3; margin-bottom: 0.35rem; }
+    .pdesc  { font-size: 0.76rem; color: var(--muted); line-height: 1.55; }
+
+    .pcode {
+      display: inline-block;
+      background: var(--bg);
+      border: 1px solid #1e2937;
+      padding: 0.12rem 0.45rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      color: var(--clean);
+      margin-top: 0.4rem;
+    }
+
+    /* before/after compare */
+    .ctx-compare {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      margin-top: 3rem;
+      align-items: center;
+    }
+
+    .ctx-box {
+      background: var(--bg);
+      border: 1px solid #1e2937;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .ctx-hd {
+      padding: 0.38rem 0.7rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #1e2937;
+    }
+
+    .ctx-hd-c { color: var(--chaos);  background: rgba(255,68,68,0.04); }
+    .ctx-hd-f { color: var(--filter); background: rgba(0,255,136,0.04); }
+
+    .ctx-bd { padding: 0.7rem; min-height: 110px; }
+
+    .ctx-blk {
+      height: 8px;
+      border-radius: 2px;
+      margin-bottom: 5px;
+    }
+
+    .ctx-arrow {
+      color: var(--filter);
+      font-size: 1.4rem;
+      text-align: center;
+      text-shadow: 0 0 12px var(--filter);
+    }
+
+    /* ════════════════════════════════
+       BUILT WITH CLAUDE
+    ════════════════════════════════ */
+    #built { background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%); }
+
+    h2.h-clean { color: var(--clean); }
+
+    .moments {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 1rem;
+    }
+
+    .mcard {
+      background: var(--bg2);
+      border: 1px solid #1e2937;
+      border-radius: 8px;
+      padding: 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .mcard:hover { border-color: #2d3748; box-shadow: 0 4px 22px rgba(0,0,0,0.4); }
+
+    .mcard::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .mc-arch::before  { background: linear-gradient(90deg, var(--clean), var(--filter)); }
+    .mc-rust::before  { background: linear-gradient(90deg, var(--orange), var(--chaos)); }
+    .mc-sec::before   { background: linear-gradient(90deg, var(--chaos), var(--orange)); }
+    .mc-test::before  { background: linear-gradient(90deg, var(--filter), var(--clean)); }
+    .mc-meta::before  { background: linear-gradient(90deg, var(--clean), var(--filter), var(--chaos)); }
+
+    .mnum   { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 0.45rem; }
+    .mtitle { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.45rem; color: #e6edf3; }
+    .mbody  { font-size: 0.75rem; color: var(--muted); line-height: 1.55; }
+
+    .mtag {
+      display: inline-block;
+      margin-top: 0.7rem;
+      font-size: 0.62rem;
+      padding: 0.12rem 0.45rem;
+      border-radius: 2px;
+      letter-spacing: 0.08em;
+    }
+
+    .tg-arch { background: rgba(0,212,255,0.08);  color: var(--clean);  border: 1px solid rgba(0,212,255,0.22); }
+    .tg-rust { background: rgba(255,136,0,0.08);  color: var(--orange); border: 1px solid rgba(255,136,0,0.22); }
+    .tg-sec  { background: rgba(255,68,68,0.08);  color: var(--chaos);  border: 1px solid rgba(255,68,68,0.22); }
+    .tg-test { background: rgba(0,255,136,0.08);  color: var(--filter); border: 1px solid rgba(0,255,136,0.22); }
+    .tg-meta { background: rgba(200,160,255,0.08); color: #c9a0ff;      border: 1px solid rgba(200,160,255,0.22); }
+
+    /* ════════════════════════════════
+       META MOMENT
+    ════════════════════════════════ */
+    #meta { background: var(--bg); text-align: center; }
+
+    .meta-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 560px; height: 560px;
+      background: radial-gradient(ellipse,
+        rgba(0,255,136,0.05) 0%,
+        rgba(0,212,255,0.03) 45%,
+        transparent 70%);
+      pointer-events: none;
+    }
+
+    .meta-inner { position: relative; z-index: 1; }
+
+    .meta-sym {
+      display: block;
+      font-size: 2.8rem;
+      color: var(--filter);
+      text-shadow: 0 0 40px var(--filter), 0 0 80px rgba(0,255,136,0.2);
+      margin-bottom: 1.4rem;
+      animation: symPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes symPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.65; transform: scale(1.06); }
+    }
+
+    .meta-q {
+      font-size: clamp(1.05rem, 2.5vw, 1.55rem);
+      line-height: 1.6;
+      max-width: 660px;
+      margin: 0 auto 1.4rem;
+      color: #e6edf3;
+    }
+
+    .meta-q em     { font-style: normal; color: var(--filter); text-shadow: 0 0 18px rgba(0,255,136,0.35); }
+    .meta-q strong { color: var(--clean); text-shadow: 0 0 18px rgba(0,212,255,0.35); }
+
+    .meta-foot { font-size: 0.76rem; color: var(--muted); }
+    .meta-foot span { color: #2d3f52; }
+
+    /* ════════════════════════════════
+       FOOTER
+    ════════════════════════════════ */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid #1e2937;
+      padding: 2.2rem 2rem;
+      text-align: center;
+    }
+
+    .foot-logo { font-size: 1.4rem; font-weight: 900; margin-bottom: 0.65rem; }
+    .foot-logo .lctx  { color: var(--clean); }
+    .foot-logo .ldash { color: var(--muted); }
+    .foot-logo .lmode { color: var(--filter); }
+
+    .foot-by  { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.35rem; }
+    .foot-sub { font-size: 0.7rem;  color: #2d3f52; }
+    .foot-sub a { color: var(--filter); text-decoration: none; }
+    .foot-sub a:hover { text-decoration: underline; }
+
+    /* ════════════════════════════════
+       NAV DOTS
+    ════════════════════════════════ */
+    .navdots {
+      position: fixed;
+      right: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      z-index: 1000;
+    }
+
+    .nd {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #1e2937;
+      border: 1px solid #2d3748;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nd:hover, .nd.on {
+      background: var(--filter);
+      border-color: var(--filter);
+      box-shadow: 0 0 8px var(--filter);
+    }
+
+    @media (max-width: 640px) {
+      .ctx-compare { grid-template-columns: 1fr; }
+      .ctx-arrow   { transform: rotate(90deg); }
+      .navdots     { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-glow-2"></div>
-  <div class="hero-content">
-    <div class="badge">
-      <span class="badge-dot"></span>
-      MCP Plugin · Built with Claude
-    </div>
-    <h1>
-      <span class="cyan">context</span><span class="green">-mode</span><br>
-      <span class="purple">× Claude</span>
+<nav class="navdots" aria-label="Sections">
+  <div class="nd on"  onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})"    title="Hero"></div>
+  <div class="nd"     onclick="document.getElementById('problem').scrollIntoView({behavior:'smooth'})" title="Problem"></div>
+  <div class="nd"     onclick="document.getElementById('pipeline').scrollIntoView({behavior:'smooth'})"title="Pipeline"></div>
+  <div class="nd"     onclick="document.getElementById('built').scrollIntoView({behavior:'smooth'})"   title="Built with Claude"></div>
+  <div class="nd"     onclick="document.getElementById('meta').scrollIntoView({behavior:'smooth'})"    title="The Meta Moment"></div>
+</nav>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<div class="section" id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+
+  <div class="wrap hero-inner">
+    <div class="hero-pill">MCP Plugin &middot; Context Window Protection</div>
+
+    <h1 class="hero-title">
+      <span class="t-ctx">ctx</span><span class="t-dash">-</span><span class="t-mode">mode</span>
     </h1>
-    <p class="hero-sub">
-      An MCP plugin that prevents raw tool output from flooding the AI agent's context window —
-      built collaboratively with Claude through architecture design, Rust, security reviews, and a meta-loop.
+
+    <p class="hero-tag">
+      Raw tool output <strong>floods your context window</strong>.<br>
+      context-mode keeps it in the sandbox — so your agent stays sharp.
     </p>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <span class="number green">90%</span>
-        <span class="label">Context Saved</span>
+
+    <div class="tbar-wrap">
+      <div class="tbar-labels">
+        <span class="lc">without context-mode &mdash; context flooded (92%)</span>
+        <span class="lf">with</span>
       </div>
-      <div class="hero-stat">
-        <span class="number">FTS5</span>
-        <span class="label">SQLite Sandbox</span>
+      <div class="tbar-track">
+        <div class="tbar-chaos"></div>
+        <div class="tbar-clean"></div>
       </div>
-      <div class="hero-stat">
-        <span class="number purple">∞</span>
-        <span class="label">Meta-Loop</span>
+      <div class="tbar-foot">
+        <span>200k token context window</span>
+        <span class="ff">28% used &mdash; focused &amp; coherent</span>
       </div>
     </div>
   </div>
-  <div class="scroll-hint">↓ SCROLL</div>
 </div>
 
-<hr class="divider">
+<!-- ══════════════════ PROBLEM ══════════════════ -->
+<div class="section" id="problem">
+  <div class="wrap">
+    <div class="eyebrow">The Problem</div>
+    <h2 class="h-chaos">Your context window is<br>not a log file.</h2>
 
-<!-- PROBLEM -->
-<section>
-  <p class="section-label">// the problem</p>
-  <h2 class="section-title">Context Window<br><span style="color:var(--red)">Overflow</span></h2>
-  <p class="section-desc">
-    Every tool call floods the agent's context with raw output. Stack traces, log dumps,
-    JSON blobs — tokens consumed, reasoning degraded, sessions cut short.
-  </p>
-
-  <div class="problem-visual">
-    <div class="terminal-header">
-      <span class="terminal-dot red"></span>
-      <span class="terminal-dot yellow"></span>
-      <span class="terminal-dot green"></span>
-      <span class="terminal-title">agent-session · without context-mode</span>
+    <div class="flood-terminal">
+      <div class="tbar">
+        <div class="dot dr"></div>
+        <div class="dot dy"></div>
+        <div class="dot dg"></div>
+        <span class="tbar-name">agent-session &mdash; without context-mode</span>
+      </div>
+      <div class="flood-body">
+        <div class="flood-scroll" id="floodScroll"></div>
+        <div class="flood-fade"></div>
+      </div>
     </div>
-    <div class="terminal-body">
-      <div class="terminal-line">
-        <span class="terminal-prompt">$</span>
-        <span class="terminal-cmd">bash("cat server.log")</span>
+
+    <div class="prob-cards">
+      <div class="prob-card">
+        <div class="prob-card-ico">&#128226;</div>
+        <div class="prob-card-title">Tool Output Floods</div>
+        <div class="prob-card-body">A single <code>git log</code> or <code>ls -la</code> dumps hundreds of lines directly into context. Multiply that by dozens of tool calls per session.</div>
       </div>
-      <div class="terminal-line">
-        <span class="terminal-prompt"> </span>
-        <span class="terminal-output">→ 47,832 tokens of raw log output injected into context</span>
+      <div class="prob-card">
+        <div class="prob-card-ico">&#127783;</div>
+        <div class="prob-card-title">Reasoning Degrades</div>
+        <div class="prob-card-body">As tokens fill up, the model loses earlier instructions, forgets the task, and makes compounding mistakes. Long sessions collapse.</div>
       </div>
-      <div class="terminal-line">
-        <span class="terminal-prompt">$</span>
-        <span class="terminal-cmd">bash("cargo test 2>&1")</span>
-      </div>
-      <div class="terminal-line">
-        <span class="terminal-prompt"> </span>
-        <span class="terminal-output">→ 12,441 tokens of test output injected into context</span>
-      </div>
-      <div class="terminal-line" style="margin-top:1rem;">
-        <span class="terminal-prompt">!</span>
-        <span class="terminal-overflow">CONTEXT WINDOW FULL — session terminated</span>
+      <div class="prob-card">
+        <div class="prob-card-ico">&#128184;</div>
+        <div class="prob-card-title">Cost Explodes</div>
+        <div class="prob-card-body">Every context token is billed on every request. Raw output inflates costs exponentially across long agentic workflows.</div>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="flow-grid">
-    <div class="flow-step">
-      <div class="flow-num">step 01</div>
-      <span class="flow-icon">🔧</span>
-      <div class="flow-name"><span class="cyan">batch_execute</span></div>
-      <div class="flow-desc">Run any shell commands + semantic queries in one call. Results never enter the main context.</div>
+<!-- ══════════════════ PIPELINE ══════════════════ -->
+<div class="section" id="pipeline">
+  <div class="wrap">
+    <div class="eyebrow">How It Works</div>
+    <h2 class="h-filter">The Filter Pipeline.</h2>
+
+    <div class="pipe">
+
+      <div class="pipe-step">
+        <div class="pnode pn-chaos">&#127774;</div>
+        <div class="pbody">
+          <div class="plabel lc2">Input &mdash; Chaos</div>
+          <div class="ptitle">batch_execute(commands, queries)</div>
+          <div class="pdesc">Agent issues commands and semantic questions in one call. Raw stdout never touches the context window — it goes directly to the isolated sandbox.</div>
+          <code class="pcode">batch_execute(commands=["git log","ls -la"], queries=["recent changes"])</code>
+        </div>
+      </div>
+
+      <div class="pipe-step">
+        <div class="pnode pn-filter">&#9649;</div>
+        <div class="pbody">
+          <div class="plabel lf2">Stage 1 &mdash; Sandbox Execution</div>
+          <div class="ptitle">Rust Executor &amp; Process Isolation</div>
+          <div class="pdesc">Commands run inside a hardened Rust executor with process group ownership, timeout guards, and path restrictions. Stdout is captured in-memory — not in your context.</div>
+          <code class="pcode">// 163,840 bytes captured in sandbox, 0 bytes in context</code>
+        </div>
+      </div>
+
+      <div class="pipe-step">
+        <div class="pnode pn-filter">&#128202;</div>
+        <div class="pbody">
+          <div class="plabel lf2">Stage 2 &mdash; FTS5 Indexing</div>
+          <div class="ptitle">SQLite Full-Text Search Index</div>
+          <div class="pdesc">All output is chunked and fed into an in-process SQLite FTS5 index. Millions of lines can be indexed in milliseconds and queried with natural language.</div>
+          <code class="pcode">INSERT INTO fts(content, source) VALUES (stdout_chunk, cmd_name)</code>
+        </div>
+      </div>
+
+      <div class="pipe-step">
+        <div class="pnode pn-clean">&#128269;</div>
+        <div class="pbody">
+          <div class="plabel lk2">Stage 3 &mdash; Semantic Query</div>
+          <div class="ptitle">BM25-Ranked Fragment Retrieval</div>
+          <div class="pdesc">The agent's queries run against the index. Only top-ranked, relevant snippets are returned — not raw dumps. Signal without noise.</div>
+          <code class="pcode">SELECT snippet(fts,...) WHERE fts MATCH ? ORDER BY rank LIMIT 5</code>
+        </div>
+      </div>
+
+      <div class="pipe-step">
+        <div class="pnode pn-clean">&#10024;</div>
+        <div class="pbody">
+          <div class="plabel lk2">Output &mdash; Clean</div>
+          <div class="ptitle">Focused Context Fragments</div>
+          <div class="pdesc">The agent receives only what it asked for. Context stays tight. The model stays focused. Costs drop. Long sessions remain coherent.</div>
+          <code class="pcode">// 3 relevant fragments returned — not 4,000 lines</code>
+        </div>
+      </div>
+
     </div>
-    <div class="flow-step">
-      <div class="flow-num">step 02</div>
-      <span class="flow-icon">🗄️</span>
-      <div class="flow-name"><span class="green">FTS5 Sandbox</span></div>
-      <div class="flow-desc">Output is auto-indexed into a SQLite full-text-search database inside the sandbox.</div>
+
+    <!-- before / after -->
+    <div class="ctx-compare">
+      <div class="ctx-box">
+        <div class="ctx-hd ctx-hd-c">Without context-mode &mdash; context window</div>
+        <div class="ctx-bd" id="ctxBefore"></div>
+      </div>
+      <div class="ctx-arrow">&#8594;</div>
+      <div class="ctx-box">
+        <div class="ctx-hd ctx-hd-f">With context-mode &mdash; context window</div>
+        <div class="ctx-bd" id="ctxAfter"></div>
+      </div>
     </div>
-    <div class="flow-step highlight">
-      <div class="flow-num">step 03</div>
-      <span class="flow-icon">🔍</span>
-      <div class="flow-name"><span class="purple">search(queries)</span></div>
-      <div class="flow-desc">Agent queries only what it needs. Only matching snippets enter the context window.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-num">result</div>
-      <span class="flow-icon">✅</span>
-      <div class="flow-name"><span class="green">90%+ savings</span></div>
-      <div class="flow-desc">Massive token reduction. Longer sessions. Sharper reasoning. No truncated output.</div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ BUILT WITH CLAUDE ══════════════════ -->
+<div class="section" id="built">
+  <div class="wrap">
+    <div class="eyebrow">Built with Claude</div>
+    <h2 class="h-clean">Five sessions.<br>One tool that watches itself.</h2>
+
+    <div class="moments">
+
+      <div class="mcard mc-arch">
+        <div class="mnum">01 &mdash; Architecture Debate</div>
+        <div class="mtitle">Where does the index live?</div>
+        <div class="mbody">Claude pushed back on a shared daemon approach. "In-process SQLite is simpler, faster, and no socket race conditions." It was right. FTS5 in-process turned out to be the correct call from the start.</div>
+        <span class="mtag tg-arch">architecture</span>
+      </div>
+
+      <div class="mcard mc-rust">
+        <div class="mnum">02 &mdash; The Rust Executor</div>
+        <div class="mtitle">Why Rust for a shell wrapper?</div>
+        <div class="mbody">Claude made the case: process group ownership, cross-platform timeout signals, and no GIL blocking IO. The Rust executor became the hardened core of the whole system.</div>
+        <span class="mtag tg-rust">rust</span>
+      </div>
+
+      <div class="mcard mc-sec">
+        <div class="mnum">03 &mdash; Security Review</div>
+        <div class="mtitle">Four blockers before ship</div>
+        <div class="mbody">Claude ran a mid-build security audit and surfaced B1-B4: path traversal in multi-file mode, missing process-group kill on timeout, unvalidated MIME types, missing input sanitisation. All resolved.</div>
+        <span class="mtag tg-sec">security</span>
+      </div>
+
+      <div class="mcard mc-test">
+        <div class="mnum">04 &mdash; Edge Cases</div>
+        <div class="mtitle">String coercion nobody thought of</div>
+        <div class="mbody">batch_execute accepted arrays for commands and queries — but Claude callers kept passing strings. Claude wrote the coercion layer and the regression tests that now prevent it from ever regressing.</div>
+        <span class="mtag tg-test">testing</span>
+      </div>
+
+      <div class="mcard mc-meta">
+        <div class="mnum">05 &mdash; The Recursive Loop</div>
+        <div class="mtitle">CLAUDE.md told Claude to use context-mode to build context-mode</div>
+        <div class="mbody">Halfway through development, CLAUDE.md was updated to mandate context-mode for all commands. Claude was now using the tool it was building, to build it — live, in production, on every commit.</div>
+        <span class="mtag tg-meta">meta</span>
+      </div>
+
     </div>
   </div>
-</section>
+</div>
 
-<hr class="divider">
+<!-- ══════════════════ META MOMENT ══════════════════ -->
+<div class="section" id="meta">
+  <div class="meta-glow"></div>
+  <div class="wrap meta-inner">
 
-<!-- ARCHITECTURE -->
-<section>
-  <p class="section-label green">// architecture</p>
-  <h2 class="section-title">How It's Built</h2>
-  <p class="section-desc">
-    A multi-language MCP server: Rust executor for sandboxed command isolation,
-    Elixir core for FTS5 indexing and search, exposed as MCP tools.
-  </p>
+    <span class="meta-sym">&#8734;</span>
 
-  <div class="arch-grid">
-    <div class="arch-card green-accent">
-      <div class="arch-label green">Rust</div>
-      <div class="arch-title">Sandboxed Executor</div>
-      <div class="arch-desc">
-        Runs shell commands inside an isolated process group. Enforces timeouts,
-        kills entire process trees on exit, prevents sandbox escapes.
-        Built with Claude reviewing every security boundary.
-      </div>
-      <div class="tag-list">
-        <span class="tag green">process group</span>
-        <span class="tag green">timeout kill</span>
-        <span class="tag muted">nix crate</span>
-      </div>
-    </div>
+    <blockquote class="meta-q">
+      &ldquo;The CLAUDE.md said: <em>use context-mode for all commands</em>.<br>
+      We were building context-mode.<br>
+      <strong>Claude was now using the tool it was building&nbsp;&mdash;<br>
+      to build the tool it was using.</strong>&rdquo;
+    </blockquote>
 
-    <div class="arch-card cyan-accent">
-      <div class="arch-label cyan">Elixir / SQLite</div>
-      <div class="arch-title">FTS5 Index</div>
-      <div class="arch-desc">
-        Command output is chunked and indexed in SQLite FTS5 tables.
-        BM25-ranked queries retrieve only the relevant fragments —
-        the rest stays in the sandbox, never in the context.
-      </div>
-      <div class="tag-list">
-        <span class="tag cyan">FTS5</span>
-        <span class="tag cyan">BM25 rank</span>
-        <span class="tag muted">Exqlite</span>
-      </div>
-    </div>
+    <p class="meta-foot">
+      This is not a metaphor. This is the git log.<br>
+      <span>commit 28f9c54 &mdash; fix(batch_execute): coerce string inputs &mdash; built using batch_execute</span>
+    </p>
 
-    <div class="arch-card purple-accent">
-      <div class="arch-label purple">MCP Protocol</div>
-      <div class="arch-title">Tool Interface</div>
-      <div class="arch-desc">
-        Exposes <code style="color:var(--cyan)">batch_execute</code>, <code style="color:var(--cyan)">search</code>,
-        <code style="color:var(--cyan)">execute</code>, <code style="color:var(--cyan)">execute_file</code>,
-        and <code style="color:var(--cyan)">fetch_and_index</code> as MCP tools
-        that any Claude session can call.
-      </div>
-      <div class="tag-list">
-        <span class="tag purple">MCP</span>
-        <span class="tag purple">multi-runtime</span>
-        <span class="tag muted">JSON-RPC</span>
-      </div>
-    </div>
   </div>
-</section>
+</div>
 
-<hr class="divider">
-
-<!-- META-LOOP -->
-<section>
-  <p class="section-label purple">// the meta-loop</p>
-  <h2 class="section-title">Claude Builds<br><span style="color:#a78bfa">Itself a Better Tool</span></h2>
-  <p class="section-desc">
-    The most unusual part: CLAUDE.md instructs Claude to use context-mode to build context-mode.
-    The tool optimizes the sessions that improve the tool.
-  </p>
-
-  <div class="meta-box">
-    <div class="meta-glow"></div>
-    <div class="meta-title">CLAUDE.md — Project Instructions</div>
-    <div class="meta-sub">
-      These rules live in the repo. Claude reads them at session start and must follow them
-      when working on context-mode itself — creating a self-referential feedback loop.
-    </div>
-    <div class="meta-code">
-      <span class="comment"># Tool Selection</span><br>
-      <br>
-      1. <span class="key">GATHER</span>: <span class="val">batch_execute(commands, queries)</span><br>
-      &nbsp;&nbsp;&nbsp;<span class="comment">— Primary tool for research. ONE call replaces many steps.</span><br>
-      <br>
-      2. <span class="key">FOLLOW-UP</span>: <span class="val">search(queries: ["q1", "q2"])</span><br>
-      &nbsp;&nbsp;&nbsp;<span class="comment">— Use for all follow-up questions. ONE call, many queries.</span><br>
-      <br>
-      3. <span class="key">PROCESSING</span>: <span class="val">execute(language, code)</span><br>
-      &nbsp;&nbsp;&nbsp;<span class="comment">— Use for API calls, log analysis, data processing.</span><br>
-      <br>
-      <span class="comment"># Rules</span><br>
-      <span class="comment">- DO NOT use Bash for commands producing &gt;20 lines of output</span><br>
-      <span class="comment">- DO NOT use Read for analysis — use execute_file</span><br>
-      <span class="comment">- DO NOT use WebFetch — use fetch_and_index instead</span>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- CLAUDE CONTRIBUTIONS -->
-<section>
-  <p class="section-label">// built with claude</p>
-  <h2 class="section-title">What Claude<br><span style="color:var(--green)">Contributed</span></h2>
-  <p class="section-desc">
-    Every significant technical decision in context-mode was designed, reviewed, or refined
-    in dialogue with Claude — from initial architecture to final security hardening.
-  </p>
-
-  <div class="contrib-list">
-    <div class="contrib-item">
-      <span class="contrib-icon">🏗️</span>
-      <div class="contrib-text">
-        <h4>Architecture Design</h4>
-        <p>Designed the two-phase flow: execute-into-sandbox then query-from-sandbox, keeping raw output permanently out of the context window.</p>
-      </div>
-    </div>
-
-    <div class="contrib-item">
-      <span class="contrib-icon">⚙️</span>
-      <div class="contrib-text">
-        <h4>Rust Executor</h4>
-        <p>Wrote the sandboxed Rust executor with process group isolation, timeout enforcement, and clean teardown to prevent zombie processes.</p>
-      </div>
-    </div>
-
-    <div class="contrib-item">
-      <span class="contrib-icon">🔒</span>
-      <div class="contrib-text">
-        <h4>Security Reviews</h4>
-        <p>Identified and resolved security blockers B1–B4: path traversal, command injection, sandbox escape vectors, and resource exhaustion.</p>
-      </div>
-    </div>
-
-    <div class="contrib-item">
-      <span class="contrib-icon">🧪</span>
-      <div class="contrib-text">
-        <h4>Test Coverage</h4>
-        <p>Added coercion tests for string→array normalization in batch_execute, ensuring the API degrades gracefully for all input shapes.</p>
-      </div>
-    </div>
-
-    <div class="contrib-item">
-      <span class="contrib-icon">🔄</span>
-      <div class="contrib-text">
-        <h4>The Meta-Loop</h4>
-        <p>Drafted CLAUDE.md rules that instruct Claude to use context-mode while building context-mode — a self-improving feedback loop.</p>
-      </div>
-    </div>
-
-    <div class="contrib-item">
-      <span class="contrib-icon">📖</span>
-      <div class="contrib-text">
-        <h4>API Ergonomics</h4>
-        <p>Shaped the tool API so that one batch_execute call replaces a dozen individual Bash calls — minimal friction, maximum savings.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- FOOTER -->
+<!-- ══════════════════ FOOTER ══════════════════ -->
 <footer>
-  <p>
-    Built by <a href="https://claudeslides.com/author/ercan-ermis/" target="_blank">Ercan Ermis</a>
-    with <a href="https://claude.ai" target="_blank">Claude</a> ·
-    <a href="https://github.com/flightlesstux/context-mode" target="_blank">github.com/flightlesstux/context-mode</a>
-  </p>
-  <p style="margin-top:0.5rem; color: #333;">claudeslides.com · ercan-ermis / context-mode</p>
+  <div class="foot-logo">
+    <span class="lctx">ctx</span><span class="ldash">-</span><span class="lmode">mode</span>
+  </div>
+  <div class="foot-by">by Ercan Ermis &mdash; submitted to <a href="https://claudeslides.com" style="color:var(--filter);text-decoration:none;">claudeslides.com</a></div>
+  <div class="foot-sub">
+    <a href="https://github.com/ercan-ermis/context-mode" target="_blank">github.com/ercan-ermis/context-mode</a>
+    &nbsp;&middot;&nbsp;MCP Plugin for Claude Code&nbsp;&middot;&nbsp;Built with Claude Sonnet
+  </div>
 </footer>
 
+<script>
+(function () {
+  'use strict';
+
+  /* ── hero noise streams ── */
+  var bg = document.getElementById('heroBg');
+  var rawLines = [
+    '{"tool":"bash","output":"total 2847\\ndrwxr-xr-x 23 user staff 736 Mar 13 .\\n...',
+    'INFO  [2026-03-13T09:12:44Z] executor: spawned pid=84291 cmd="git log --oneline -50"',
+    'ERROR 0x4f2a: unexpected EOF reading stdout buffer at offset 184320',
+    'DEBUG chunk[0]: 65536 bytes written to pipe fd=7 total_written=65536',
+    'WARN  rate_limit: 429 retry after 1200ms attempt=3/5 backoff=exponential',
+    '{"jsonrpc":"2.0","id":42,"result":{"content":[{"type":"text","text":"commit a3f9...\\n',
+    'stdout[84291]: HEAD -> main * 3e7b1c2 fix: batch_execute coercion\\n',
+    'INFO  fts5: indexed 18432 rows in 4ms throughput=4608000 rows/sec',
+    'TRACE sql: SELECT snippet(fts,0,"[","]",-20) WHERE fts MATCH "error" ORDER BY rank',
+    '0000: 7b 22 74 6f 6f 6c 22 3a 22 62 61 73 68 22 7d  {"tool":"bash"}',
+    'DEBUG process_group: kill(-84291, SIGTERM) timeout=30s elapsed=29.8s',
+    'INFO  context_window: 187432/200000 tokens (93.7%) — degradation imminent',
+    'WARN  token_budget: 12568 tokens remaining — truncating future output',
+    'ERROR context overflow: output truncated at 131072 bytes reason=budget_exhausted',
+    '{"cmd":"ls -la /","exit_code":0,"bytes":4823,"lines":67,"duration_ms":12}',
+    'DEBUG segment merge triggered at doc_count=1000 level=0->1',
+  ];
+
+  for (var i = 0; i < 13; i++) {
+    var s = document.createElement('div');
+    s.className = 'ns';
+    s.style.left = (i * 7.8) + '%';
+    s.style.animationDuration = (7 + Math.random() * 9) + 's';
+    s.style.animationDelay = '-' + (Math.random() * 14) + 's';
+    s.style.opacity = String(0.35 + Math.random() * 0.65);
+
+    var txt = '';
+    for (var j = 0; j < 36; j++) {
+      txt += rawLines[Math.floor(Math.random() * rawLines.length)] + '\n';
+    }
+    s.textContent = txt;
+    bg.appendChild(s);
+  }
+
+  /* ── flood terminal ── */
+  var floodRoot = document.getElementById('floodScroll');
+  var flColors  = ['fc','fo','fd','fw','fd','fc','fd'];
+  var flLines   = [
+    '$ git log --oneline -50',
+    'a3f9c2b fix(batch_execute): coerce string inputs for commands and queries params',
+    'e1cdf8c test(batch_execute): add coercion tests for string-array normalization',
+    '28f9c54 fix(batch_execute): string inputs now normalized before processing',
+    '1d8f9bf fix(executor): suppress Rust unused-variable warning in execute_file',
+    '1def4ac fix(executor): kill entire process group on timeout to prevent hangs',
+    '0f8fd56 fix(executor): address security blockers B1-B4 in multi-file mode',
+    'b2e19aa feat(mcp): add ctx_batch_execute tool with auto-index and search',
+    '91c3d7f feat(executor): Rust-based sandbox with FTS5 in-process indexing',
+    '$ ls -laR /usr/local/lib/node_modules',
+    'total 0',
+    'drwxr-xr-x  847 root wheel  27104 Mar 13 09:12 .',
+    'drwxr-xr-x    8 root wheel    256 Feb  1 11:34 ..',
+    'drwxr-xr-x   23 root wheel    736 Mar 12 16:45 @anthropic',
+    '-rw-r--r--    1 root wheel  18432 Mar 12 16:45 package.json',
+    '-rw-r--r--    1 root wheel  93842 Mar 12 16:45 package-lock.json',
+    '{"level":"debug","ts":"2026-03-13T09:12:44Z","msg":"spawning child",',
+    '  "cmd":"/bin/sh","args":["-c","git log --oneline -50"],"pid":84291}',
+    'INFO  fts5: segment merge at doc_count=1000',
+    'DEBUG chunk: wrote 65536 bytes fd=7 offset=0',
+    'DEBUG chunk: wrote 65536 bytes fd=7 offset=65536',
+    'DEBUG chunk: wrote 32768 bytes fd=7 offset=131072',
+    'INFO  stdout[84291]: 163840 bytes total, 2371 lines',
+    'WARN  context_window_tokens: 187432/200000 (93.7% full)',
+    'ERROR approaching context limit — agent degradation imminent',
+    '$ npm list --depth=0',
+    'context-mode@1.0.0 /Users/ercan/github/context-mode',
+    '├── @anthropic-ai/sdk@0.39.0',
+    '├── better-sqlite3@11.9.1',
+    '├── glob@11.0.1',
+    '└── zod@3.24.2',
+    '# ↑ 12,394 tokens consumed — context budget critical',
+  ];
+
+  var frag = document.createDocumentFragment();
+  for (var r = 0; r < 3; r++) {
+    flLines.forEach(function (line, idx) {
+      var d = document.createElement('div');
+      d.className = 'fl ' + flColors[idx % flColors.length];
+      d.textContent = line;
+      frag.appendChild(d);
+    });
+  }
+  floodRoot.appendChild(frag);
+
+  /* ── before/after blocks ── */
+  var before = document.getElementById('ctxBefore');
+  var after  = document.getElementById('ctxAfter');
+
+  var bHtml = '';
+  [95,88,92,85,90,78,93,87,82,96,89,75,91,84].forEach(function (w) {
+    var col = Math.random() > 0.35 ? 'var(--chaos)' : 'var(--orange)';
+    bHtml += '<div class="ctx-blk" style="width:' + w + '%;background:' + col + ';opacity:' + (0.3 + Math.random() * 0.45) + '"></div>';
+  });
+  before.innerHTML = bHtml + '<div style="font-size:0.62rem;color:var(--chaos);margin-top:0.5rem;">&#9888; 187,432 / 200,000 tokens &mdash; 93.7%</div>';
+
+  var aHtml = '';
+  [60, 44, 52].forEach(function (w) {
+    aHtml += '<div class="ctx-blk" style="width:' + w + '%;background:var(--filter);opacity:0.72"></div>';
+  });
+  for (var e = 0; e < 6; e++) {
+    aHtml += '<div class="ctx-blk" style="width:' + (18 + Math.random() * 28) + '%;background:#1e2937;opacity:0.38"></div>';
+  }
+  after.innerHTML = aHtml + '<div style="font-size:0.62rem;color:var(--filter);margin-top:0.5rem;">&#10003; 3 relevant fragments &mdash; 28% used</div>';
+
+  /* ── nav dot active on scroll ── */
+  var sectionIds = ['hero','problem','pipeline','built','meta'];
+  var dots = document.querySelectorAll('.nd');
+
+  function syncDots () {
+    var sy = window.scrollY + window.innerHeight * 0.38;
+    var active = 0;
+    sectionIds.forEach(function (id, i) {
+      var el = document.getElementById(id);
+      if (el && el.offsetTop <= sy) active = i;
+    });
+    dots.forEach(function (d, i) { d.classList.toggle('on', i === active); });
+  }
+
+  window.addEventListener('scroll', syncDots, { passive: true });
+  syncDots();
+}());
+</script>
 </body>
 </html>
