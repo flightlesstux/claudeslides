@@ -1,6 +1,17 @@
 [
   {
     "author_slug": "ercan-ermis",
+    "slug": "context-mode",
+    "url": "author/ercan-ermis/context-mode/",
+    "title": "context-mode — Protecting the AI Agent Context Window",
+    "author": "Ercan Ermis",
+    "description": "How I built context-mode with Claude — an MCP plugin that keeps raw tool output out of your context window so AI agents stay focused.",
+    "og_image": "https://claudeslides.com/author/ercan-ermis/context-mode/cover.jpg",
+    "cover_url": "https://claudeslides.com/author/ercan-ermis/context-mode/cover.jpg",
+    "date": "2026-03-13"
+  },
+  {
+    "author_slug": "ercan-ermis",
     "slug": "moto-g05",
     "url": "author/ercan-ermis/moto-g05/",
     "title": "Moto G05 × Claude — ADB Optimization Session",
