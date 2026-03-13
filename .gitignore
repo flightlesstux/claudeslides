@@ -1,0 +1,9 @@
+# Local dev tools
+.playwright-mcp/
+.claude/
+website/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
