@@ -61,6 +61,14 @@ After generating, remind me to:
 
 > No `og:image` needed — CI auto-generates a branded cover image for your gallery card.
 
+### Lazy mode (zero effort)
+
+Already built something in the same Claude Code session? Just run this — Claude figures out the rest itself:
+
+```
+$ claude "Look at everything we did in this conversation. Figure out what I built, generate a self-contained index.html slide for claudeslides.com, and include a Usage Details table with model name, total tokens used, session duration, tech stack, what was achieved, and estimated USD cost — all pulled from this session. Use <meta name="author" content="[your-slug]">, inline all CSS/JS, skip og:image (CI handles it). Then create the file at author/[slug]/[project-slug]/index.html, fork https://github.com/flightlesstux/claudeslides using gh CLI, commit it on a new branch, and open a pull request. Do it all. No questions."
+```
+
 ## What counts as a submission?
 
 Anything Claude helped you with:

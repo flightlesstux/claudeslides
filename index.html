@@ -915,6 +915,12 @@ After generating, remind me to:
 2. Save as author/[slug]/[project-slug]/index.html
 3. Open a pull request</pre>
   </div>
+  <p class="contribute-sub-label">Option 3b — Lazy mode (zero effort)</p>
+  <div class="prompt-block" id="lazyBlock">
+    <button class="copy-btn" id="copyLazyBtn" onclick="copyLazy()">Copy</button>
+    <pre id="lazyText"><span class="prompt-dollar">$</span>claude "Look at everything we did in this conversation. Figure out what I built, generate a self-contained index.html slide for claudeslides.com, and include a Usage Details table with model name, total tokens used, session duration, tech stack, what was achieved, and estimated USD cost — all pulled from this session. Use &lt;meta name=&quot;author&quot; content=&quot;[your-slug]&quot;&gt;, inline all CSS/JS, skip og:image (CI handles it). Then create the file at author/[slug]/[project-slug]/index.html, fork https://github.com/flightlesstux/claudeslides using gh CLI, commit it on a new branch, and open a pull request. Do it all. No questions."</pre>
+  </div>
+
   <p class="claude-note">
     ✦ &nbsp;No og:image needed — CI auto-generates a branded cover image for your gallery card.
     SEO tags are also auto-injected. Just focus on your story.
@@ -1043,6 +1049,15 @@ function copyTechie() {
   const text = document.getElementById('techieText').innerText;
   navigator.clipboard.writeText(text).then(function() {
     const btn = document.getElementById('copyTechieBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function copyLazy() {
+  const raw = document.getElementById('lazyText').innerText;
+  navigator.clipboard.writeText(raw.replace(/^\$\s*/, '')).then(function() {
+    const btn = document.getElementById('copyLazyBtn');
     btn.textContent = 'Copied';
     btn.classList.add('copied');
     setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
