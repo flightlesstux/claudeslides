@@ -1,0 +1,22 @@
+claude --resume efcffa33-0de0-4535-a49b-0de680d3ae14
+
+
+⏺ This is a product launch / social media strategy question, not a coding task — outside my lane as a coding assistant.
+
+  That said, quick honest take:
+
+  Timing — Tuesday–Thursday, 9–11am your local time tends to get the best organic reach on most platforms. Avoid weekends and Mondays.
+
+  Platform priority for this project:
+  - X/Twitter — developer + AI audience, high retweet velocity for tools like this
+  - LinkedIn — if you want the "anyone can code now" angle to reach non-tech people
+  - Reddit (r/ClaudeAI, r/artificial, r/webdev) — high-intent audience, honest feedback
+
+  Language / angle that lands hard:
+  The hook is the one-liner. Lead with the demo, not the description. Something like:
+
+  "You built something with Claude. Now share it with the world — in one prompt."
+
+  Show the copy button. Show the PR opening. Keep it under 30 seconds if you do video.
+
+  For real strategic advice on timing, hashtags, and reach — a social media strategist or a tool like Typefully/Buffer with their analytics would serve you much better than me.
