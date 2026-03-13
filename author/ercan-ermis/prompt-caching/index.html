@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaudeSlides × Prompt Caching — Built with Claude, Powered by Claude</title>
+<meta name="author" content="Ercan Ermis">
+<meta name="description" content="How I built ClaudeSlides with Claude — and how prompt caching makes every conversation blazing fast. A story of co-creation.">
+<style>
+  :root {
+    --bg:     #0d0d0d;
+    --bg2:    #111;
+    --bg3:    #161616;
+    --card:   #141414;
+    --border: #222;
+    --accent: #d97706;
+    --accent2:#f59e0b;
+    --cache:  #10b981;
+    --miss:   #ef4444;
+    --text:   #f0ece8;
+    --muted:  #6b6258;
+    --dim:    #3a3530;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── SLIDE BASE ── */
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── SLIDE 1: HERO ── */
+  #s1 { background: var(--bg); }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(217,119,6,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(217,119,6,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    text-align: center;
+    max-width: 860px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 0.4rem 1.2rem;
+    margin-bottom: 2.5rem;
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .hero-title {
+    font-family: system-ui, sans-serif;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title .hl { color: var(--accent2); }
+  .hero-title .dim { color: var(--muted); font-weight: 300; }
+
+  .hero-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 3rem;
+    line-height: 2;
+    letter-spacing: 0.04em;
+    font-family: system-ui, sans-serif;
+    font-weight: 300;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%  { transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* ── SLIDE 2: WHAT IS CLAUDESLIDES ── */
+  #s2 { background: var(--bg2); }
+
+  .section-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: system-ui, sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 3rem;
+    max-width: 700px;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .feat {
+    background: var(--card);
+    padding: 2rem 1.75rem;
+  }
+
+  .feat-icon {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .feat h3 {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.6rem;
+    font-family: system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  .feat p {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.8;
+    font-family: system-ui, sans-serif;
+    font-weight: 300;
+  }
+
+  /* ── SLIDE 3: BUILT WITH CLAUDE ── */
+  #s3 { background: var(--bg); }
+
+  .timeline {
+    max-width: 720px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tl-item {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tl-item:last-child { border-bottom: none; }
+
+  .tl-num {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--border);
+    padding: 1.5rem 1.5rem 1.5rem 0;
+    line-height: 1;
+    font-family: system-ui, sans-serif;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    padding-top: 1.75rem;
+  }
+
+  .tl-content {
+    padding: 1.5rem 0 1.5rem 1.5rem;
+  }
+
+  .tl-content h3 {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+    font-family: system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  .tl-content p {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.8;
+    font-family: system-ui, sans-serif;
+    font-weight: 300;
+  }
+
+  /* ── SLIDE 4: PROMPT CACHING ── */
+  #s4 { background: var(--bg2); }
+
+  .cache-demo {
+    max-width: 780px;
+    width: 100%;
+  }
+
+  .cache-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 1px;
+    font-size: 0.7rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    border: 1px solid var(--border);
+  }
+
+  .cache-label {
+    width: 160px;
+    flex-shrink: 0;
+    padding: 0.9rem 1rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+  }
+
+  .cache-bar-wrap {
+    flex: 1;
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .cache-bar {
+    height: 8px;
+    border-radius: 0;
+    background: var(--dim);
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .cache-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    animation: fill-in 1.2s ease forwards;
+  }
+
+  .fill-cached { background: var(--cache); }
+  .fill-miss   { background: var(--miss); }
+  .fill-new    { background: var(--accent); }
+
+  @keyframes fill-in {
+    from { width: 0; }
+  }
+
+  .cache-pct {
+    font-size: 0.65rem;
+    min-width: 40px;
+    text-align: right;
+  }
+  .pct-cached { color: var(--cache); }
+  .pct-miss   { color: var(--miss); }
+  .pct-new    { color: var(--accent); }
+
+  .cache-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 2rem;
+    max-width: 780px;
+    width: 100%;
+  }
+
+  .stat-box {
+    background: var(--card);
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: system-ui, sans-serif;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-lbl {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: system-ui, sans-serif;
+  }
+
+  /* ── SLIDE 5: THE CONVERSATION ── */
+  #s5 { background: var(--bg); }
+
+  .chat {
+    max-width: 680px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .msg {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    line-height: 1.8;
+    font-family: system-ui, sans-serif;
+    font-weight: 300;
+    position: relative;
+  }
+
+  .msg-who {
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .msg.human { background: var(--card); }
+  .msg.human .msg-who { color: var(--accent); }
+  .msg.claude { background: #0a1a12; border-color: #1a3a24; }
+  .msg.claude .msg-who { color: var(--cache); }
+
+  .msg .cached-tag {
+    display: inline-block;
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: var(--cache);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    padding: 0.1rem 0.5rem;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-family: monospace;
+  }
+
+  /* ── SLIDE 6: CTA ── */
+  #s6 { background: var(--bg2); }
+
+  .cta-inner {
+    text-align: center;
+    max-width: 640px;
+  }
+
+  .coming-soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--accent);
+    background: rgba(217,119,6,0.06);
+    color: var(--accent2);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .dot-live {
+    width: 6px;
+    height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .cta-title {
+    font-family: system-ui, sans-serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 1.5rem;
+  }
+  .cta-title .hl { color: var(--accent2); }
+
+  .cta-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: system-ui, sans-serif;
+    font-weight: 300;
+    line-height: 2;
+    margin-bottom: 3rem;
+  }
+
+  .cta-links {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.75rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-family: system-ui, sans-serif;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--accent2); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── SLIDE NAV DOTS ── */
+  .nav-dots {
+    position: fixed;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    z-index: 100;
+  }
+
+  .nav-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-dot.active { background: var(--accent); height: 20px; border-radius: 3px; }
+
+  /* ── AUTHOR TAG ── */
+  .author-tag {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+    z-index: 100;
+  }
+  .author-tag a { color: var(--dim); text-decoration: none; }
+  .author-tag a:hover { color: var(--accent); }
+
+  @media (max-width: 700px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .tl-item { grid-template-columns: 60px 1fr; }
+    .cache-stats { grid-template-columns: 1fr; }
+    .cache-label { width: 100px; }
+    .nav-dots { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV DOTS -->
+<div class="nav-dots" id="navDots">
+  <div class="nav-dot active" onclick="goTo(0)"></div>
+  <div class="nav-dot" onclick="goTo(1)"></div>
+  <div class="nav-dot" onclick="goTo(2)"></div>
+  <div class="nav-dot" onclick="goTo(3)"></div>
+  <div class="nav-dot" onclick="goTo(4)"></div>
+  <div class="nav-dot" onclick="goTo(5)"></div>
+</div>
+
+<div class="author-tag">
+  <a href="https://claudeslides.com" target="_blank">claudeslides.com</a>
+  &nbsp;·&nbsp; Ercan Ermis
+</div>
+
+<!-- SLIDE 1: HERO -->
+<section class="slide" id="s1">
+  <div class="grid-bg"></div>
+  <div class="hero-inner">
+    <div class="badge">
+      <span class="dot-live" style="background:var(--accent)"></span>
+      Open Source · Gallery Platform
+    </div>
+    <h1 class="hero-title">
+      Built with <span class="hl">Claude.</span><br>
+      <span class="dim">Powered by</span><br>
+      Prompt Caching.
+    </h1>
+    <p class="hero-sub">
+      I had an idea, Claude had the skills.
+      Together we shipped claudeslides.com — a gallery where anyone can show
+      what they built with AI. And prompt caching made it all blazing fast.
+    </p>
+    <div class="badge" style="font-size:0.55rem;opacity:0.5">↓ scroll to explore</div>
+  </div>
+  <div class="scroll-hint">↓ scroll</div>
+</section>
+
+<!-- SLIDE 2: WHAT IS CLAUDESLIDES -->
+<section class="slide" id="s2">
+  <div class="section-label">✦ The Product</div>
+  <h2 class="section-title">ClaudeSlides — A gallery for people who build with Claude.</h2>
+  <div class="features-grid">
+    <div class="feat">
+      <span class="feat-icon">🌐</span>
+      <h3>Open Gallery</h3>
+      <p>Anyone submits a single HTML file. The gallery auto-generates their public page at claudeslides.com/author/their-slug/</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">⚙️</span>
+      <h3>Zero-Config CI</h3>
+      <p>PR merges trigger automated pipelines: cover generation, SEO injection, sitemap rebuild, submissions.json update.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🛡️</span>
+      <h3>Auto-Moderation</h3>
+      <p>Every PR is scanned for harmful content before a human ever sees it. Content Safety Check must pass to merge.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🖼️</span>
+      <h3>Auto Cover Art</h3>
+      <p>No og:image? CI generates a branded 1200×630 cover.jpg, injects it as og:image and twitter:image automatically.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🔍</span>
+      <h3>Full SEO Pipeline</h3>
+      <p>Missing meta tags are injected on every merge. Robots, canonical, OG, Twitter — never touching author content.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🔒</span>
+      <h3>Protected Main</h3>
+      <p>Branch protection enforces PRs. Status checks required. The CI bot is the only one allowed to commit directly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: BUILT WITH CLAUDE -->
+<section class="slide" id="s3">
+  <div class="section-label">✦ The Journey</div>
+  <h2 class="section-title" style="margin-bottom:2rem">How Claude and I built this together.</h2>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-num">01</div>
+      <div class="tl-content">
+        <h3>The Idea</h3>
+        <p>I wanted a place where real people — not just developers — could share what they built with AI. I described it to Claude. Claude wrote the first gallery page.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-num">02</div>
+      <div class="tl-content">
+        <h3>The Pipeline</h3>
+        <p>CI/CD from scratch — PR moderation, cover generation, SEO injection, sitemap, submissions.json. All Python. All written in conversation with Claude.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-num">03</div>
+      <div class="tl-content">
+        <h3>The Fix</h3>
+        <p>The CI bot couldn't push to main due to branch protection. Three debugging sessions with Claude, one PAT, and an explicit remote URL later — it worked.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-num">04</div>
+      <div class="tl-content">
+        <h3>The Polish</h3>
+        <p>Contribute page, gallery design, SEO meta, sitemap, robots.txt, og.png. Every pixel, every tag, every script — Claude and I, back and forth.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-num">05</div>
+      <div class="tl-content">
+        <h3>The Ship</h3>
+        <p>claudeslides.com is live. Gallery builds automatically. Every new PR triggers the full pipeline. The product works exactly as imagined.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: PROMPT CACHING -->
+<section class="slide" id="s4">
+  <div class="section-label">✦ The Technology</div>
+  <h2 class="section-title">Prompt Caching — why it matters.</h2>
+  <div class="cache-demo">
+    <div class="cache-row">
+      <div class="cache-label">Without Cache</div>
+      <div class="cache-bar-wrap">
+        <div class="cache-bar">
+          <div class="cache-fill fill-miss" style="--w:100%" id="b1"></div>
+        </div>
+        <span class="cache-pct pct-miss">100%</span>
+      </div>
+    </div>
+    <div class="cache-row">
+      <div class="cache-label">First Request</div>
+      <div class="cache-bar-wrap">
+        <div class="cache-bar">
+          <div class="cache-fill fill-new" style="width:100%"></div>
+        </div>
+        <span class="cache-pct pct-new">cached ✓</span>
+      </div>
+    </div>
+    <div class="cache-row">
+      <div class="cache-label">2nd Request</div>
+      <div class="cache-bar-wrap">
+        <div class="cache-bar" style="display:flex;gap:1px">
+          <div class="cache-fill fill-cached" style="width:82%;position:relative;animation:none"></div>
+          <div class="cache-fill fill-new" style="width:18%;position:relative;animation:none;left:0"></div>
+        </div>
+        <span class="cache-pct pct-cached">82% hit</span>
+      </div>
+    </div>
+    <div class="cache-row">
+      <div class="cache-label">3rd+ Request</div>
+      <div class="cache-bar-wrap">
+        <div class="cache-bar" style="display:flex;gap:1px">
+          <div class="cache-fill fill-cached" style="width:95%;position:relative;animation:none"></div>
+          <div class="cache-fill fill-new" style="width:5%;position:relative;animation:none;left:0"></div>
+        </div>
+        <span class="cache-pct pct-cached">95% hit</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cache-stats">
+    <div class="stat-box">
+      <span class="stat-val" style="color:var(--cache)">90%</span>
+      <span class="stat-lbl">Cost Reduction<br>on cached tokens</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-val" style="color:var(--accent2)">5×</span>
+      <span class="stat-lbl">Faster TTFT<br>vs. full re-processing</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-val" style="color:var(--text)">1024</span>
+      <span class="stat-lbl">Min tokens<br>to trigger cache</span>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 5: THE CONVERSATION -->
+<section class="slide" id="s5">
+  <div class="section-label">✦ How It Felt</div>
+  <h2 class="section-title" style="margin-bottom:2rem">Every feature, a conversation.</h2>
+  <div class="chat">
+    <div class="msg human">
+      <span class="msg-who">Ercan</span>
+      I want a gallery where anyone can submit a single HTML file and it shows up at their own URL automatically.
+    </div>
+    <div class="msg claude">
+      <span class="msg-who">Claude <span class="cached-tag">context cached</span></span>
+      Here's the architecture: a GitHub Pages repo, a CI pipeline that scans author/ for index.html files, extracts metadata, and writes submissions.json. The gallery fetches that JSON and renders cards dynamically...
+    </div>
+    <div class="msg human">
+      <span class="msg-who">Ercan</span>
+      The CI bot can't push to main — permission denied 403.
+    </div>
+    <div class="msg claude">
+      <span class="msg-who">Claude <span class="cached-tag">context cached</span></span>
+      The checkout action uses GITHUB_TOKEN which has limited push rights. Replace it with a PAT and set the remote URL explicitly: git remote set-url origin https://x-access-token:${TOKEN}@github.com/...
+    </div>
+    <div class="msg human">
+      <span class="msg-who">Ercan</span>
+      Now also generate a cover image for every submission and inject SEO tags if missing. Don't touch the author content.
+    </div>
+    <div class="msg claude">
+      <span class="msg-who">Claude <span class="cached-tag">context cached</span></span>
+      generate_covers.py will create a 1200×630 branded JPEG next to each index.html. inject_seo.py will add only missing tags before &lt;/head&gt;, preserving everything the author wrote...
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 6: CTA -->
+<section class="slide" id="s6">
+  <div class="cta-inner">
+    <div class="coming-soon">
+      <span class="dot-live"></span>
+      Release Soon
+    </div>
+    <h2 class="cta-title">
+      Your story<br>belongs <span class="hl">here.</span>
+    </h2>
+    <p class="cta-sub">
+      claudeslides.com is an open gallery for everyone who built something with Claude.<br>
+      No experience required. One HTML file. Your own URL. Forever.
+    </p>
+    <div class="cta-links">
+      <a class="btn btn-primary" href="https://claudeslides.com" target="_blank" rel="noopener">claudeslides.com →</a>
+      <a class="btn btn-ghost" href="https://github.com/flightlesstux/claudeslides" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn btn-ghost" href="https://claudeslides.com/contribute/" target="_blank" rel="noopener">Contribute</a>
+    </div>
+    <p style="margin-top:3rem;font-size:0.55rem;color:var(--dim);letter-spacing:0.2em;text-transform:uppercase">
+      Made with Claude · by Ercan Ermis · Netherlands 🇳🇱
+    </p>
+  </div>
+</section>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.nav-dot');
+
+  function goTo(i) {
+    slides[i].scrollIntoView({ behavior: 'smooth' });
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const i = Array.from(slides).indexOf(e.target);
+        dots.forEach((d, j) => d.classList.toggle('active', i === j));
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
