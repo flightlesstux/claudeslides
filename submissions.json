@@ -53,5 +53,16 @@
     "og_image": "https://claudeslides.com/author/ercan-ermis/prompt-caching/cover.jpg",
     "cover_url": "https://claudeslides.com/author/ercan-ermis/prompt-caching/cover.jpg",
     "date": "2026-03-13"
+  },
+  {
+    "author_slug": "flightlesstux",
+    "slug": "token-saver",
+    "url": "author/flightlesstux/token-saver/",
+    "title": "token-saver — Built with Claude",
+    "author": "flightlesstux",
+    "description": "An MCP plugin that watches every AI output for token waste — fires warnings, errors, and alerts before your context burns.",
+    "og_image": "https://claudeslides.com/author/flightlesstux/token-saver/cover.jpg",
+    "cover_url": "https://claudeslides.com/author/flightlesstux/token-saver/cover.jpg",
+    "date": "2026-03-13"
   }
 ]
