@@ -75,8 +75,8 @@ def main():
             slide_slug  = slide_dir.name
 
             og_image   = extract_og_image(html)
-            cover_file = repo_root / "covers" / author_slug / f"{slide_slug}.jpg"
-            cover_url  = og_image or (f"covers/{author_slug}/{slide_slug}.jpg" if cover_file.exists() else "")
+            cover_file = slide_dir / "cover.jpg"
+            cover_url  = og_image or (f"author/{author_slug}/{slide_slug}/cover.jpg" if cover_file.exists() else "")
 
             entry = {
                 "author_slug": author_slug,

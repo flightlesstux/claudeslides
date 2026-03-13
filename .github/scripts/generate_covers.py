@@ -92,8 +92,6 @@ def make_cover(slug, title, author, description, out_path):
 def main():
     repo_root  = Path(__file__).resolve().parent.parent.parent
     author_dir = repo_root / "author"
-    covers_dir = repo_root / "covers"
-    covers_dir.mkdir(exist_ok=True)
 
     for author_subdir in sorted(author_dir.iterdir()):
         if not author_subdir.is_dir():
@@ -113,15 +111,12 @@ def main():
                 print(f"  — {author_slug}/{slide_slug}: has og:image, skipping")
                 continue
 
-            out_dir = covers_dir / author_slug
-            out_dir.mkdir(exist_ok=True)
-
             make_cover(
                 slug=slide_slug,
                 title=extract_title(html) or slide_slug,
                 author=extract_meta(html, "author") or author_slug,
                 description=extract_meta(html, "description") or "",
-                out_path=str(out_dir / f"{slide_slug}.jpg"),
+                out_path=str(slide_dir / "cover.jpg"),
             )
 
     print("Done.")
