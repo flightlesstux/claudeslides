@@ -694,6 +694,40 @@
   .guideline-col.welcome ul li::before { content: '✦'; color: var(--gold); opacity: 0.7; font-size: 0.65rem; margin-top: 1px; flex-shrink: 0; }
   .guideline-col.reject  ul li::before { content: '—'; color: var(--muted); font-size: 0.65rem; margin-top: 1px; flex-shrink: 0; }
 
+  /* ── NON-TECH BLOCK ── */
+  .nontech-block {
+    margin-top: 3rem;
+    padding: 2.5rem;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .nontech-header {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+  .nontech-icon {
+    color: var(--gold);
+    font-size: 1.2rem;
+    opacity: 0.5;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .nontech-header h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+  .nontech-header p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.85;
+    font-weight: 300;
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .steps { grid-template-columns: 1fr 1fr; }
@@ -856,6 +890,42 @@ Thanks!</pre>
     SEO tags are also auto-injected. Just focus on your story.
   </p>
 
+  <div class="nontech-block">
+    <div class="nontech-header">
+      <span class="nontech-icon">✦</span>
+      <div>
+        <h3>Don't know what forking means?</h3>
+        <p>No GitHub experience? No problem. Copy this prompt into <a href="https://claude.ai" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">claude.ai</a> — it will generate your page <em>and</em> walk you through every click, button by button, entirely in your browser. No terminal, no downloads, nothing to install.</p>
+      </div>
+    </div>
+    <div class="prompt-block" id="nontechBlock" style="margin-top:1.5rem">
+      <button class="copy-btn" id="copyNontechBtn" onclick="copyNontech()">Copy</button>
+      <pre id="nontechText">Hi Claude! I want to add my project to ClaudeSlides (claudeslides.com) but I have no technical experience — I've never used GitHub, I don't know what forking means, and I can't use a terminal.
+
+Please help me do everything using only my web browser. Here's what I built with Claude:
+
+[DESCRIBE YOUR PROJECT — what you built, learned, or solved with Claude's help]
+
+Please do this in two parts:
+
+PART 1 — Generate my page:
+Create a single self-contained index.html file that tells my story beautifully.
+- All CSS and JS must be inline
+- Include: &lt;meta name="author" content="[MY NAME]"&gt; and &lt;meta name="description" content="[ONE SENTENCE]"&gt;
+- Make it visually appealing — it's my canvas
+
+PART 2 — Walk me through submitting it (browser only, step by step):
+1. How to create a free GitHub account if I don't have one
+2. How to go to https://github.com/flightlesstux/claudeslides and click Fork
+3. How to navigate to the author/ folder in my fork
+4. How to create a new file at author/[my-name]/index.html using GitHub's web editor
+5. How to paste my generated HTML and save it
+6. How to open a Pull Request back to the original repo
+
+Please be very specific — tell me exactly what to click, what to type, and what each step looks like. Assume I've never done this before.</pre>
+    </div>
+  </div>
+
   <div class="guidelines-grid">
     <div class="guideline-col welcome">
       <h3>Welcome</h3>
@@ -916,6 +986,15 @@ function copyPrompt() {
   const text = document.getElementById('promptText').innerText;
   navigator.clipboard.writeText(text).then(function() {
     const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function copyNontech() {
+  const text = document.getElementById('nontechText').innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    const btn = document.getElementById('copyNontechBtn');
     btn.textContent = 'Copied';
     btn.classList.add('copied');
     setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
