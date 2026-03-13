@@ -37,7 +37,7 @@ Create a self-contained index.html slide for my claudeslides.com submission abou
 [DESCRIBE YOUR PROJECT — what you built or learned with Claude]
 
 Rules:
-- All CSS/JS inline (CDN links OK); no og:image (CI generates it)
+- All CSS/JS inline (CDN links OK); no og:image (CI generates and injects it)
 - <meta name="author" content="[your-slug]">
 - <meta name="description" content="[one sentence]">
 
