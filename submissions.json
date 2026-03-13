@@ -1,20 +1,24 @@
 [
   {
-    "slug": "motorola-g05",
-    "url": "author/motorola-g05/",
+    "author_slug": "ercan-ermis",
+    "slug": "moto-g05",
+    "url": "author/ercan-ermis/moto-g05/",
     "title": "Moto G05 × Claude — ADB Optimization Session",
-    "author": "motorola-g05",
-    "description": "",
+    "author": "Ercan Ermis",
+    "description": "How I used Claude AI to optimize my Motorola Moto G05 via ADB commands.",
     "og_image": "",
-    "date": "2026-03-12"
+    "cover_url": "author/ercan-ermis/moto-g05/cover.jpg",
+    "date": "2026-03-13"
   },
   {
-    "slug": "samsung-note8",
-    "url": "author/samsung-note8/",
+    "author_slug": "ercan-ermis",
+    "slug": "note8",
+    "url": "author/ercan-ermis/note8/",
     "title": "Samsung Galaxy Note 8 × Claude — ADB Audit & Optimization",
-    "author": "samsung-note8",
-    "description": "",
+    "author": "Ercan Ermis",
+    "description": "How I used Claude AI to audit and optimize my Samsung Galaxy Note 8 via ADB commands.",
     "og_image": "",
-    "date": "2026-03-12"
+    "cover_url": "author/ercan-ermis/note8/cover.jpg",
+    "date": "2026-03-13"
   }
 ]
