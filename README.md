@@ -39,7 +39,6 @@ Create a self-contained index.html slide for my claudeslides.com submission abou
 Rules:
 - All CSS/JS inline (CDN links OK); no og:image (CI generates and injects it)
 - <meta name="author" content="[your-slug]">
-- <meta name="description" content="[one sentence]">
 
 The page MUST include a visible "Usage Details" section rendered as a polished HTML table with exactly these rows:
 
