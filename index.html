@@ -588,6 +588,112 @@
   footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
   footer a:hover { color: var(--gold); }
 
+  /* ── CONTRIBUTE ── */
+  .contribute-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 8rem 3rem;
+  }
+  .contribute-section h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2.5rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+  .contribute-section > p {
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    line-height: 1.85;
+  }
+  .contribute-sub-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin: 2.5rem 0 1rem;
+  }
+  .prompt-block {
+    position: relative;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    overflow-x: auto;
+    margin-bottom: 0;
+  }
+  .prompt-block pre {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover, .copy-btn.copied { border-color: var(--gold); color: var(--gold); }
+  .prompt-dollar { color: var(--gold); user-select: none; margin-right: 0.5rem; }
+  .claude-note {
+    margin-top: 1.5rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    border-left: 1px solid var(--gold);
+    padding-left: 1rem;
+    opacity: 0.8;
+    line-height: 1.8;
+  }
+  .guidelines-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .guideline-col h3 {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--gold);
+  }
+  .guideline-col.reject h3 { color: var(--muted); }
+  .guideline-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+  .guideline-col ul li {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .guideline-col.welcome ul li::before { content: '✦'; color: var(--gold); opacity: 0.7; font-size: 0.65rem; margin-top: 1px; flex-shrink: 0; }
+  .guideline-col.reject  ul li::before { content: '—'; color: var(--muted); font-size: 0.65rem; margin-top: 1px; flex-shrink: 0; }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .steps { grid-template-columns: 1fr 1fr; }
@@ -601,6 +707,8 @@
     .hero-stats { gap: 2.5rem; }
     .gallery-section { padding: 4rem 1.5rem; }
     .how-section { padding: 5rem 1.5rem; }
+    .contribute-section { padding: 5rem 1.5rem; }
+    .guidelines-grid { grid-template-columns: 1fr; gap: 2rem; }
     .mission-section { padding: 6rem 1.5rem; }
     .section-header { flex-direction: column; align-items: flex-start; }
     #search-box { width: 100%; }
@@ -618,8 +726,9 @@
   <div class="nav-links">
     <a href="#gallery">Gallery</a>
     <a href="#how">How it works</a>
+    <a href="#contribute">Contribute</a>
     <a href="https://github.com/flightlesstux/claudeslides" target="_blank" rel="noopener">GitHub</a>
-    <a class="btn btn-primary" href="/contribute/" target="_blank" rel="noopener">+ Submit yours</a>
+    <a class="btn btn-primary" href="#contribute">+ Submit yours</a>
   </div>
 </nav>
 
@@ -641,7 +750,7 @@
 
   <div class="hero-actions">
     <a class="btn btn-primary" href="#gallery">Explore the gallery</a>
-    <a class="btn btn-outline" href="/contribute/" target="_blank" rel="noopener">How to contribute</a>
+    <a class="btn btn-outline" href="#contribute">How to contribute</a>
   </div>
 
   <div class="hero-stats">
@@ -711,6 +820,75 @@
   </div>
 </section>
 
+<!-- CONTRIBUTE -->
+<section class="contribute-section" id="contribute">
+  <h2>Contribute with Claude.</h2>
+  <p>
+    Don't know how to write HTML? That's fine — Claude does. Copy a prompt below and let it generate
+    your ready-to-submit page. No coding knowledge required.
+  </p>
+
+  <p class="contribute-sub-label">Option 1 — claude.ai</p>
+  <div class="prompt-block" id="promptBlock">
+    <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
+    <pre id="promptText">Hi Claude! I want to submit my project to ClaudeSlides — an open gallery at claudeslides.com where people share what they built with Claude.
+
+Please create a single self-contained index.html file for my submission. Here's what I want to share:
+
+[DESCRIBE YOUR PROJECT — what you built, learned, or solved with Claude's help]
+
+The file must follow these rules:
+- All CSS and JS inline (no external files, CDN links are fine)
+- Include these meta tags in &lt;head&gt;:
+    &lt;meta name="author" content="[YOUR NAME]"&gt;
+    &lt;meta name="description" content="[ONE SENTENCE ABOUT YOUR PROJECT]"&gt;
+- Design it however you like — it's your canvas
+- It should tell my story in a visually appealing way
+
+After generating the file, remind me to:
+1. Fork https://github.com/flightlesstux/claudeslides
+2. Create folder: author/[my-slug]/[project-slug]/
+3. Save the file as index.html inside that folder
+4. Open a pull request
+
+Thanks!</pre>
+  </div>
+
+  <p class="contribute-sub-label">Option 2 — Claude Code (terminal one-liner)</p>
+  <div class="prompt-block" id="onelineBlock">
+    <button class="copy-btn" id="copyOnelineBtn" onclick="copyOneliner()">Copy</button>
+    <pre id="onelineText"><span class="prompt-dollar">$</span>claude "I want to submit my project to claudeslides.com. Please: (1) fetch https://raw.githubusercontent.com/flightlesstux/claudeslides/main/CONTRIBUTING.md and read the contribution rules, (2) ask me to describe what I built or learned with Claude, (3) create the file at author/{my-slug}/{my-project-slug}/index.html with all CSS/JS inline and the required meta tags filled in, (4) fork https://github.com/flightlesstux/claudeslides using gh CLI, clone it locally, commit my file on a new branch, and open a pull request."</pre>
+  </div>
+  <p class="claude-note">
+    ✦ &nbsp;No og:image needed — CI auto-generates a branded cover image for your gallery card.
+    SEO tags are also auto-injected. Just focus on your story.
+  </p>
+
+  <div class="guidelines-grid">
+    <div class="guideline-col welcome">
+      <h3>Welcome</h3>
+      <ul>
+        <li>A project you built or shipped with Claude's help</li>
+        <li>A creative experiment — writing, art, music, games</li>
+        <li>A tool or automation that changed your workflow</li>
+        <li>Something you learned that surprised you</li>
+        <li>A problem you couldn't solve until Claude helped</li>
+        <li>Beginner work — it counts just as much</li>
+      </ul>
+    </div>
+    <div class="guideline-col reject">
+      <h3>Not allowed</h3>
+      <ul>
+        <li>Hate speech, slurs, or discriminatory content</li>
+        <li>Any sexualization or harm targeting minors</li>
+        <li>Harassment or personal attacks</li>
+        <li>Malicious code, scripts, or injection attacks</li>
+        <li>Spam, scams, or disinformation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- MISSION -->
 <section class="mission-section">
   <h2>Everyone has a story worth sharing</h2>
@@ -734,7 +912,7 @@
   <p>
     <a href="https://github.com/flightlesstux/claudeslides" target="_blank" rel="noopener">Open source on GitHub</a>
     &nbsp;·&nbsp;
-    <a href="/contribute/" target="_blank" rel="noopener">Contribute</a>
+    <a href="#contribute">Contribute</a>
     &nbsp;·&nbsp;
     <a href="https://linkedin.com/in/ercanermis" target="_blank" rel="noopener">Ercan Ermis</a>
   </p>
@@ -742,6 +920,25 @@
 </footer>
 
 <script>
+function copyPrompt() {
+  const text = document.getElementById('promptText').innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function copyOneliner() {
+  const raw = document.getElementById('onelineText').innerText;
+  navigator.clipboard.writeText(raw.replace(/^\$\s*/, '')).then(function() {
+    const btn = document.getElementById('copyOnelineBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
 (async () => {
   const grid = document.getElementById('grid');
   const statCount = document.getElementById('stat-count');
@@ -758,7 +955,7 @@
   } catch {
     grid.innerHTML = `<div class="state-msg">
       <div class="icon">📂</div>
-      <div>No submissions yet — <a href="/contribute/" style="color:var(--accent)">be the first!</a></div>
+      <div>No submissions yet — <a href="#contribute" style="color:var(--accent)">be the first!</a></div>
     </div>`;
     statCount.textContent = '0';
     return;
