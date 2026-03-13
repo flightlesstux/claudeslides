@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 generate_covers.py
-Generates 1200x630 branded cover images for author submissions that have no og:image.
+Generates 1200x630 branded cover images for all author submissions.
+Always regenerates cover.jpg — contributors must not provide their own images.
 Run from the repository root.
 """
 
@@ -33,11 +34,6 @@ def extract_meta(html, name):
 
 def extract_title(html):
     m = re.search(r"<title>([^<]+)</title>", html, re.IGNORECASE)
-    return m.group(1).strip() if m else ""
-
-
-def extract_og_image(html):
-    m = re.search(r'property=["\']og:image["\']\s+content=["\']([^"\']+)["\']', html, re.IGNORECASE)
     return m.group(1).strip() if m else ""
 
 
@@ -106,10 +102,6 @@ def main():
             html        = html_file.read_text(encoding="utf-8", errors="replace")
             author_slug = author_subdir.name
             slide_slug  = slide_dir.name
-
-            if extract_og_image(html):
-                print(f"  — {author_slug}/{slide_slug}: has og:image, skipping")
-                continue
 
             make_cover(
                 slug=slide_slug,

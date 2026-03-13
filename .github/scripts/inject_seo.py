@@ -56,11 +56,16 @@ def inject_seo(html, author_slug, slide_slug):
     if not has_tag(html, r'property=["\']og:description["\']'):
         tags.append(f'<meta property="og:description" content="{description}">')
 
+    # Cover images are always CI-generated — strip any contributor-provided og:image
+    # and replace with the canonical CI cover URL.
     cover_url = f"{BASE_URL}/author/{author_slug}/{slide_slug}/cover.jpg"
-    if not has_tag(html, r'property=["\']og:image["\']'):
-        tags.append(f'<meta property="og:image" content="{cover_url}">')
-        tags.append('<meta property="og:image:width" content="1200">')
-        tags.append('<meta property="og:image:height" content="630">')
+    html = re.sub(r'\s*<meta\s+property=["\']og:image(?::width|:height)?["\']\s+content=[^>]+>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s*<meta\s+content=[^>]+\s+property=["\']og:image(?::width|:height)?["\'][^>]*>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s*<meta\s+name=["\']twitter:image["\']\s+content=[^>]+>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s*<meta\s+content=[^>]+\s+name=["\']twitter:image["\'][^>]*>', '', html, flags=re.IGNORECASE)
+    tags.append(f'<meta property="og:image" content="{cover_url}">')
+    tags.append('<meta property="og:image:width" content="1200">')
+    tags.append('<meta property="og:image:height" content="630">')
 
     if not has_tag(html, r'name=["\']twitter:card["\']'):
         tags.append('<meta name="twitter:card" content="summary_large_image">')
@@ -71,11 +76,7 @@ def inject_seo(html, author_slug, slide_slug):
     if not has_tag(html, r'name=["\']twitter:description["\']'):
         tags.append(f'<meta name="twitter:description" content="{description}">')
 
-    if not has_tag(html, r'name=["\']twitter:image["\']'):
-        tags.append(f'<meta name="twitter:image" content="{cover_url}">')
-
-    if not tags:
-        return html, False
+    tags.append(f'<meta name="twitter:image" content="{cover_url}">')
 
     block = "\n<!-- auto-seo: injected by ClaudeSlides CI -->\n" + "\n".join(tags) + "\n"
     new_html = re.sub(r'(</head>)', block + r'\1', html, count=1, flags=re.IGNORECASE)

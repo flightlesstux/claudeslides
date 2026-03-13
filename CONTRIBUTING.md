@@ -27,18 +27,11 @@ author/{author-slug}/{slide-slug}/index.html
 <meta name="description" content="One sentence about what was built with Claude">
 ```
 
-### Optional but Recommended
-
-```html
-<!-- og:image — 1200×630px. If omitted, CI generates a branded cover.jpg automatically. -->
-<meta property="og:image" content="https://...">
-```
-
-> **CI auto-injects the following if missing** (via `inject_seo.py` — never overwrites existing tags):
-> `robots`, `canonical`, `og:type`, `og:site_name`, `og:url`, `og:title`, `og:description`,
-> `twitter:card`, `twitter:title`, `twitter:description`
+> **CI auto-generates and injects all image and SEO tags** (via `generate_covers.py` + `inject_seo.py`).
+> Contributors must NOT provide `og:image`, `twitter:image`, or any cover image — they are always
+> overwritten by the pipeline with the CI-generated branded `cover.jpg`.
 >
-> You only need to provide `author` and `description`. Everything else is handled by the pipeline.
+> You only need to provide `author` and `description`. Everything else is handled automatically.
 
 ---
 
@@ -72,7 +65,7 @@ author/{author-slug}/{slide-slug}/index.html
 
 ### On merge to `main` (`update-gallery.yml`)
 
-1. Runs `generate_covers.py` — generates `cover.jpg` (1200×630) next to each `index.html` that has no `og:image`
+1. Runs `generate_covers.py` — always generates `cover.jpg` (1200×630) for every submission (overwrites any contributor-provided image)
 2. Runs `inject_seo.py` — injects missing SEO/OG/Twitter meta tags into each `index.html` (non-destructive)
 3. Runs `generate_submissions.py` — extracts metadata, writes `submissions.json`
 4. Runs `generate_sitemap.py` — regenerates `sitemap.xml` with all current submissions
