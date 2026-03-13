@@ -12,6 +12,17 @@
   },
   {
     "author_slug": "ercan-ermis",
+    "slug": "eemail",
+    "url": "author/ercan-ermis/eemail/",
+    "title": "eeMail × Claude — Built Together",
+    "author": "flightlesstux",
+    "description": "eeMail — a self-hosted Gmail-like email client built entirely with Claude Code. From zero to full-stack in days.",
+    "og_image": "https://claudeslides.com/author/ercan-ermis/eemail/cover.jpg",
+    "cover_url": "https://claudeslides.com/author/ercan-ermis/eemail/cover.jpg",
+    "date": "2026-03-13"
+  },
+  {
+    "author_slug": "ercan-ermis",
     "slug": "moto-g05",
     "url": "author/ercan-ermis/moto-g05/",
     "title": "Moto G05 × Claude — ADB Optimization Session",
@@ -41,17 +52,6 @@
     "description": "How I built ClaudeSlides with Claude — and how prompt caching makes every conversation blazing fast. A story of co-creation.",
     "og_image": "https://claudeslides.com/author/ercan-ermis/prompt-caching/cover.jpg",
     "cover_url": "https://claudeslides.com/author/ercan-ermis/prompt-caching/cover.jpg",
-    "date": "2026-03-13"
-  },
-  {
-    "author_slug": "ercan-ermis",
-    "slug": "eemail",
-    "url": "author/ercan-ermis/eemail/",
-    "title": "eeMail × Claude — Built Together",
-    "author": "flightlesstux",
-    "description": "eeMail — a self-hosted Gmail-like email client built entirely with Claude Code. From zero to full-stack in days.",
-    "og_image": "https://claudeslides.com/author/ercan-ermis/eemail/cover.jpg",
-    "cover_url": "https://claudeslides.com/author/ercan-ermis/eemail/cover.jpg",
     "date": "2026-03-13"
   }
 ]
