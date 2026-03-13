@@ -334,6 +334,54 @@
     line-height: 1.8;
   }
 
+  /* ── CLAUDE CODE SECTION ── */
+  .claude-code-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 3rem 7rem;
+  }
+
+  .claude-code-section h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
+  .claude-code-section > p {
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    line-height: 1.85;
+  }
+
+  .oneliner-block {
+    position: relative;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    overflow-x: auto;
+  }
+
+  .oneliner-block pre {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .oneliner-block .prompt-dollar {
+    color: var(--gold);
+    user-select: none;
+    margin-right: 0.5rem;
+  }
+
   /* ── META TAGS ── */
   .meta-section {
     max-width: 900px;
@@ -645,6 +693,26 @@ Thanks!</pre>
   </p>
 </section>
 
+<!-- CLAUDE CODE ONE-LINER -->
+<section class="claude-code-section">
+  <h2>Or use Claude Code — one command.</h2>
+  <p>
+    Have <a href="https://claude.ai/code" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">Claude Code</a> installed?
+    Paste this single command into your terminal. It will ask what you built, generate your page, and open the pull request — entirely on its own.
+    Requires <a href="https://cli.github.com" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">gh CLI</a> authenticated with your GitHub account.
+  </p>
+
+  <div class="oneliner-block" id="onelineBlock">
+    <button class="copy-btn" id="copyOnelineBtn" onclick="copyOneliner()">Copy</button>
+    <pre id="onelineText"><span class="prompt-dollar">$</span>claude "I want to submit my project to claudeslides.com. Please: (1) fetch https://raw.githubusercontent.com/flightlesstux/claudeslides/main/CONTRIBUTING.md and read the contribution rules, (2) ask me to describe what I built or learned with Claude, (3) create the file at author/{my-slug}/{my-project-slug}/index.html with all CSS/JS inline and the required meta tags filled in, (4) fork https://github.com/flightlesstux/claudeslides using gh CLI, clone it locally, commit my file on a new branch, and open a pull request."</pre>
+  </div>
+
+  <p class="claude-note">
+    ✦ &nbsp;Claude Code will guide you through each step interactively.
+    It reads the contribution spec directly from the repo so it always follows the latest rules.
+  </p>
+</section>
+
 <!-- META TAGS -->
 <section class="meta-section">
   <h2>Two meta tags. Required.</h2>
@@ -728,6 +796,17 @@ function copyPrompt() {
   const text = document.getElementById('promptText').innerText;
   navigator.clipboard.writeText(text).then(function() {
     const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function copyOneliner() {
+  // Strip the leading "$ " prompt indicator before copying
+  const raw = document.getElementById('onelineText').innerText;
+  const text = raw.replace(/^\$\s*/, '');
+  navigator.clipboard.writeText(text).then(function() {
+    const btn = document.getElementById('copyOnelineBtn');
     btn.textContent = 'Copied';
     btn.classList.add('copied');
     setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
